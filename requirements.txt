@@ -3,3 +3,4 @@ pandas>=2.2,<4
 numpy>=1.26,<3
 yfinance>=0.2.65,<1
 finance-datareader>=0.9.202,<1
+matplotlib>=3.10,<4
