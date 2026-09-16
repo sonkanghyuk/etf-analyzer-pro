@@ -56,11 +56,17 @@ def get_yield(ticker, close):
 if run:
     st.cache_data.clear()
 
-with st.spinner("시장 데이터 불러오는 중..."):
-    prices, closes = get_prices(tuple(tickers), str(start), str(end + timedelta(days=1)))
+try:
+    with st.spinner("시장 데이터 불러오는 중..."):
+        prices, closes = get_prices(tuple(tickers), str(start), str(end + timedelta(days=1)))
+except Exception as e:
+    st.error("Yahoo Finance 가격 데이터를 불러오는 중 오류가 발생했습니다.")
+    st.code(str(e))
+    st.info("잠시 뒤 다시 시도하거나, 티커 형식이 맞는지 확인해 주세요. 미국 ETF는 QQQ, SCHD처럼 입력하고 한국 종목은 Yahoo Finance 형식이 필요합니다.")
+    st.stop()
 
 if prices.empty:
-    st.error("가격 데이터를 불러오지 못했습니다. 티커 형식을 확인하세요.")
+    st.error("가격 데이터를 불러오지 못했습니다. 티커 형식을 확인하거나 잠시 뒤 다시 시도하세요.")
     st.stop()
 
 available = [t for t in tickers if t in prices.columns and prices[t].notna().sum() >= 2]
@@ -75,10 +81,24 @@ closes = closes[[c for c in available if c in closes.columns]]
 
 snapshots = {}
 yields = {}
-for t in available:
-    snapshots[t] = get_snapshot(t)
+progress = st.progress(0, text="ETF 상세정보 불러오는 중...")
+for idx, t in enumerate(available, start=1):
+    try:
+        snapshots[t] = get_snapshot(t)
+    except Exception as e:
+        snapshots[t] = {
+            "ticker": t, "name": t, "expense_ratio_pct": None,
+            "aum": None, "category": None,
+            "holdings": pd.DataFrame(columns=["etf", "holding", "weight"]),
+            "sectors": {}, "holdings_scope": "없음", "error": str(e),
+        }
     close = float(closes[t].dropna().iloc[-1]) if t in closes.columns and not closes[t].dropna().empty else None
-    yields[t] = get_yield(t, close)
+    try:
+        yields[t] = get_yield(t, close)
+    except Exception:
+        yields[t] = (None, None)
+    progress.progress(idx / len(available), text=f"{t} 정보 확인 중...")
+progress.empty()
 
 uploaded = []
 if files:
@@ -131,6 +151,8 @@ for t in available:
         "AUM": s.get("aum"),
     })
 summary = pd.DataFrame(rows)
+
+st.success("가격 데이터 로딩 완료: " + ", ".join(available))
 
 t1, t2, t3, t4, t5 = st.tabs(["종합 요약", "수익률·MDD", "상관관계", "구성종목·중복도", "섹터"])
 
