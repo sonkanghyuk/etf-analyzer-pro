@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>요금제 | Clipora AI 편집</title>
+  <meta name="description" content="Clipora AI 영상 편집 요금제 — 무료로 시작하고 필요한 만큼 업그레이드하세요." />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <a href="index.html" class="logo"><span class="logo-mark">▶</span>Clipora</a>
+      <nav class="nav" id="nav">
+        <a href="index.html#features">기능</a>
+        <a href="index.html#how">사용 방법</a>
+        <a href="pricing.html" class="active">요금제</a>
+        <a href="editor.html">에디터</a>
+      </nav>
+      <div class="header-cta">
+        <a href="#" class="btn btn-ghost" data-login>로그인</a>
+        <a href="editor.html" class="btn btn-primary">무료로 시작</a>
+        <button class="menu-btn" aria-label="메뉴" data-menu>☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" style="padding-bottom: 32px;">
+      <div class="container">
+        <span class="badge">🎉 연간 결제 시 <b>최대 30% 할인</b></span>
+        <h1>크리에이터를 위한<br /><span class="grad-text">합리적인 요금제</span></h1>
+        <p>무료로 시작하고, 채널이 성장하는 만큼 업그레이드하세요. 언제든 해지할 수 있어요.</p>
+        <div class="billing-toggle" role="tablist">
+          <button class="on" data-billing="monthly">월간 결제</button>
+          <button data-billing="yearly">연간 결제<span class="save">-30%</span></button>
+        </div>
+      </div>
+    </section>
+
+    <section style="padding-top: 24px;">
+      <div class="container">
+        <div class="plans" id="plans"></div>
+
+        <!-- 크레딧 계산기 -->
+        <div class="calc">
+          <div>
+            <h3 style="margin-bottom: 6px;">나에게 맞는 플랜 찾기</h3>
+            <p style="color: var(--muted); margin-bottom: 24px; font-size: 14px;">한 달에 편집할 영상 양을 입력하면 적합한 플랜을 추천해 드려요.</p>
+            <div class="row">
+              <label>월 업로드 영상 수 <output id="countOut">8개</output></label>
+              <input type="range" id="count" min="1" max="100" value="8" />
+            </div>
+            <div class="row">
+              <label>영상당 평균 길이 <output id="lenOut">10분</output></label>
+              <input type="range" id="len" min="1" max="60" value="10" />
+            </div>
+          </div>
+          <div class="calc-result">
+            <span>필요한 편집 시간</span>
+            <b id="needMin">80분 / 월</b>
+            <span>추천 플랜</span>
+            <b class="grad-text" id="recPlan">Basic</b>
+            <a href="#plans" class="btn btn-primary" style="margin-top: 8px;" id="recBtn">이 플랜 선택하기</a>
+          </div>
+        </div>
+
+        <!-- 플랜 비교표 -->
+        <div class="compare-wrap">
+          <table class="compare" id="compare"></table>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq" style="padding-top: 0;">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">FAQ</span>
+          <h2>자주 묻는 질문</h2>
+        </div>
+        <div class="faq">
+          <details open>
+            <summary>편집 시간(분)은 어떻게 차감되나요?</summary>
+            <p>업로드한 원본 영상의 길이를 기준으로 차감됩니다. 예를 들어 10분짜리 영상을 AI 자막·컷편집하면 10분이 차감되며, 같은 영상을 다시 편집할 때는 추가 차감되지 않아요.</p>
+          </details>
+          <details>
+            <summary>남은 편집 시간은 다음 달로 이월되나요?</summary>
+            <p>월간 플랜은 매 결제일에 초기화됩니다. 연간 플랜은 1년치 시간이 한 번에 지급되어 기간 내 자유롭게 사용할 수 있어요.</p>
+          </details>
+          <details>
+            <summary>무료 플랜으로 만든 영상에도 워터마크가 들어가나요?</summary>
+            <p>네, Free 플랜은 내보내기 시 우측 하단에 작은 워터마크가 들어갑니다. Basic 이상 플랜에서는 워터마크 없이 내보낼 수 있어요.</p>
+          </details>
+          <details>
+            <summary>플랜 변경이나 해지는 어떻게 하나요?</summary>
+            <p>마이페이지 &gt; 구독 관리에서 언제든 변경·해지할 수 있습니다. 업그레이드는 즉시 적용되며 남은 기간만큼 일할 계산됩니다. 해지 시 현재 결제 기간이 끝날 때까지 이용 가능해요.</p>
+          </details>
+          <details>
+            <summary>환불 정책이 궁금해요.</summary>
+            <p>결제 후 7일 이내, 편집 시간을 사용하지 않았다면 전액 환불됩니다. 일부 사용한 경우 사용량을 제외하고 환불해 드려요.</p>
+          </details>
+          <details>
+            <summary>세금계산서 발행이 가능한가요?</summary>
+            <p>Pro, Team 플랜은 사업자 정보를 등록하면 매월 전자세금계산서가 자동 발행됩니다.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section style="padding-top: 0;">
+      <div class="container">
+        <div class="cta-box">
+          <h2>지금 무료로 시작해 보세요</h2>
+          <p>카드 등록 없이 매월 30분 무료 편집 제공</p>
+          <a href="editor.html" class="btn btn-lg">무료로 영상 편집하기 →</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div>© 2026 Clipora. All rights reserved.</div>
+      <nav>
+        <a href="#">이용약관</a>
+        <a href="#">개인정보처리방침</a>
+        <a href="mailto:hello@example.com">문의하기</a>
+      </nav>
+    </div>
+  </footer>
+
+  <!-- 결제 모달 -->
+  <div class="modal" id="checkout" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <h3 id="coTitle">Pro 플랜 구독</h3>
+      <p>결제 정보를 입력해 주세요. (데모 — 실제 결제되지 않습니다)</p>
+      <div class="summary"><span id="coCycle">월간 결제</span><b id="coPrice">₩29,900</b></div>
+      <input type="email" placeholder="이메일" id="coEmail" />
+      <input type="text" placeholder="이름" />
+      <div class="modal-actions">
+        <button class="btn btn-ghost" data-close>취소</button>
+        <button class="btn btn-primary" id="coPay">결제하기</button>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+  <script src="pricing.js"></script>
+</body>
+</html>

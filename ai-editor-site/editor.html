@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>에디터 | Clipora AI 편집</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .editor { display: grid; grid-template-columns: 1fr 380px; gap: 20px; padding: 24px 0 48px; }
+    .panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
+    .stage { position: relative; aspect-ratio: 16/9; background: #000; border-radius: 12px; overflow: hidden; display: grid; place-items: center; }
+    .stage.vertical { aspect-ratio: 9/16; max-height: 70vh; margin-inline: auto; }
+    .stage video { width: 100%; height: 100%; object-fit: contain; }
+    .stage.vertical video { object-fit: cover; }
+    .stage .empty { text-align: center; color: var(--muted); padding: 24px; }
+    .caption {
+      position: absolute; left: 50%; bottom: 8%; transform: translateX(-50%);
+      max-width: 90%; padding: 6px 14px; border-radius: 8px; text-align: center;
+      font-weight: 800; font-size: clamp(14px, 2.4vw, 24px); pointer-events: none;
+    }
+    .caption.s-box { background: rgba(0,0,0,.7); color: #fff; }
+    .caption.s-pop { color: #ffe14d; -webkit-text-stroke: 1.2px #000; paint-order: stroke fill; text-shadow: 0 3px 0 #000; }
+    .caption.s-clean { color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,.9); font-weight: 600; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .chip { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); font-size: 14px; font-weight: 600; }
+    .chip.on { border-color: var(--brand); background: rgba(124, 92, 255, .18); }
+    .timeline { position: relative; height: 46px; margin-top: 14px; background: var(--bg-2); border-radius: 10px; overflow: hidden; cursor: pointer; }
+    .timeline .seg { position: absolute; top: 8px; bottom: 8px; background: rgba(124, 92, 255, .55); border-radius: 4px; }
+    .timeline .cut { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(45deg, rgba(255,92,138,.35) 0 6px, transparent 6px 12px); }
+    .timeline .head { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff; }
+    .side h3 { font-size: 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .usage { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+    .bar { height: 6px; background: var(--bg-2); border-radius: 99px; overflow: hidden; margin-top: 6px; }
+    .bar i { display: block; height: 100%; background: var(--grad); }
+    .subs { display: grid; gap: 8px; max-height: 52vh; overflow-y: auto; padding-right: 4px; }
+    .sub { display: grid; grid-template-columns: 64px 1fr 24px; gap: 8px; align-items: center; padding: 8px; border-radius: 10px; border: 1px solid transparent; }
+    .sub.active { border-color: var(--brand); background: rgba(124,92,255,.1); }
+    .sub time { font-size: 12px; color: var(--brand-2); cursor: pointer; font-variant-numeric: tabular-nums; }
+    .sub input { width: 100%; background: transparent; border: 0; color: var(--text); font: inherit; font-size: 14px; padding: 4px; border-radius: 6px; }
+    .sub input:focus { outline: 1px solid var(--line); background: var(--bg-2); }
+    .sub button { color: var(--muted); }
+    .progress { margin-top: 12px; font-size: 14px; color: var(--muted); display: none; }
+    .progress.show { display: block; }
+    .actions { display: grid; gap: 8px; margin-top: 14px; }
+    @media (max-width: 900px) { .editor { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <a href="index.html" class="logo"><span class="logo-mark">▶</span>Clipora</a>
+      <nav class="nav" id="nav">
+        <a href="index.html#features">기능</a>
+        <a href="pricing.html">요금제</a>
+        <a href="editor.html" class="active">에디터</a>
+      </nav>
+      <div class="header-cta">
+        <a href="pricing.html" class="btn btn-primary">업그레이드</a>
+        <button class="menu-btn" aria-label="메뉴" data-menu>☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container editor">
+    <div class="panel">
+      <div class="stage" id="stage">
+        <label class="empty" id="empty" style="cursor:pointer">
+          <div style="font-size: 40px;">🎬</div>
+          <b style="color: var(--text);">영상을 선택하거나 끌어다 놓으세요</b><br />
+          <small>영상은 브라우저 안에서만 재생되며 서버로 업로드되지 않습니다</small>
+          <input type="file" accept="video/*" id="file" hidden />
+        </label>
+        <video id="video" controls playsinline hidden></video>
+        <div class="caption s-box" id="caption" hidden></div>
+      </div>
+
+      <div class="timeline" id="timeline" title="클릭해서 이동"></div>
+
+      <div class="toolbar">
+        <button class="chip" id="aiSub">💬 AI 자동 자막</button>
+        <button class="chip" id="aiCut">✂️ AI 컷편집</button>
+        <button class="chip" id="aiShort">📱 숏폼(9:16) 보기</button>
+        <span style="flex:1"></span>
+        <button class="chip on" data-style="s-box">박스</button>
+        <button class="chip" data-style="s-pop">예능</button>
+        <button class="chip" data-style="s-clean">깔끔</button>
+      </div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <aside class="panel side">
+      <div class="usage">
+        Free 플랜 · 이번 달 편집 시간 <b id="usedMin">0</b> / 30분
+        <div class="bar"><i id="usedBar" style="width:0%"></i></div>
+      </div>
+      <h3>자막 <button class="chip" id="addSub">+ 현재 위치에 추가</button></h3>
+      <div class="subs" id="subs"><p style="color: var(--muted); font-size: 14px;">영상을 올리고 "AI 자동 자막"을 눌러 보세요.</p></div>
+      <div class="actions">
+        <button class="btn btn-primary" id="exportSrt">자막 파일(.srt) 내보내기</button>
+        <button class="btn btn-ghost" id="exportVideo">영상 내보내기</button>
+      </div>
+    </aside>
+  </main>
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+  <script src="editor.js"></script>
+</body>
+</html>
