@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>내 콘텐츠 | Clipora AI 숏폼</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <a href="index.html" class="logo"><span class="logo-mark">▶</span>Clipora</a>
+      <nav class="nav" id="nav">
+        <a href="index.html#how">사용 방법</a>
+        <a href="template.html">템플릿</a>
+        <a href="contents.html" class="active">내 콘텐츠</a>
+        <a href="pricing.html">요금제</a>
+      </nav>
+      <div class="header-cta">
+        <a href="editor.html" class="btn btn-primary">+ 숏폼 만들기</a>
+        <button class="menu-btn" aria-label="메뉴" data-menu>☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container page">
+    <div class="page-head">
+      <div>
+        <h1>내 콘텐츠</h1>
+        <p>만든 숏폼은 이 브라우저에 저장돼요. 다운로드해서 SNS에 올려 보세요.</p>
+      </div>
+      <div class="usage-card">
+        <div>Free · 남은 시간 <b id="remain">90분</b> / 90분</div>
+        <div class="bar"><i id="usageBar" style="width: 0%"></i></div>
+        <a href="pricing.html">더 많은 시간이 필요하다면 →</a>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div><span>만든 숏폼</span><b id="sCount">0</b></div>
+      <div><span>총 재생 길이</span><b id="sDur">0초</b></div>
+      <div><span>원본 영상</span><b id="sSrc">0</b></div>
+    </div>
+
+    <div class="filters">
+      <input type="search" id="q" class="search" placeholder="제목 · 원본 파일명 검색" />
+      <select id="sort" class="search" style="max-width: 160px;">
+        <option value="new">최신순</option>
+        <option value="old">오래된순</option>
+        <option value="score">AI 점수순</option>
+      </select>
+    </div>
+    <div class="content-grid" id="grid"></div>
+  </main>
+
+  <div class="modal" id="player" role="dialog" aria-modal="true">
+    <div class="modal-card player-card">
+      <video id="playerVideo" controls playsinline></video>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" data-close>닫기</button>
+        <a class="btn btn-primary" id="playerDl">다운로드</a>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+  <script src="templates.js"></script>
+  <script src="store.js"></script>
+  <script src="contents.js"></script>
+</body>
+</html>

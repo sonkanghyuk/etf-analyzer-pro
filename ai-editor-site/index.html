@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Clipora | AI 영상 편집</title>
-  <meta name="description" content="영상만 올리면 AI가 자막, 컷편집, 숏폼까지 자동으로. Clipora AI 영상 편집." />
+  <title>Clipora | 촬영본을 숏폼으로, AI 숏폼 자동 제작</title>
+  <meta name="description" content="강의·강연·인터뷰 촬영본을 올리면 AI가 하이라이트를 골라 자막 입힌 9:16 숏폼으로 만들어 드립니다." />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -13,10 +13,10 @@
     <div class="container">
       <a href="index.html" class="logo"><span class="logo-mark">▶</span>Clipora</a>
       <nav class="nav" id="nav">
-        <a href="#features">기능</a>
         <a href="#how">사용 방법</a>
+        <a href="template.html">템플릿</a>
+        <a href="contents.html">내 콘텐츠</a>
         <a href="pricing.html">요금제</a>
-        <a href="editor.html">에디터</a>
       </nav>
       <div class="header-cta">
         <a href="#" class="btn btn-ghost" data-login>로그인</a>
@@ -29,37 +29,29 @@
   <main>
     <section class="hero">
       <div class="container">
-        <span class="badge">✨ 신규 기능 <b>AI 숏폼 자동 추출</b> 출시</span>
-        <h1>영상만 올리세요<br /><span class="grad-text">편집은 AI가 끝냅니다</span></h1>
-        <p>자막, 컷편집, 숏폼 추출, 번역 더빙까지. 몇 시간 걸리던 편집을 단 몇 분 만에 완성하세요.</p>
-        <div class="hero-actions">
-          <a href="editor.html" class="btn btn-primary btn-lg">무료로 편집 시작하기 →</a>
-          <a href="pricing.html" class="btn btn-ghost btn-lg">요금제 보기</a>
-        </div>
+        <span class="badge">🎁 가입 즉시 <b>90분 무료</b> · 카드 등록 불필요</span>
+        <h1>촬영본만 올리세요<br /><span class="grad-text">숏폼은 AI가 만듭니다</span></h1>
+        <p>강의·강연·인터뷰·웨비나 영상에서 AI가 가장 빛나는 순간을 골라, 자막까지 입힌 9:16 숏폼으로 만들어 드려요.</p>
 
-        <a href="editor.html" class="dropzone" id="dropzone" style="display:block">
-          <div class="icon">⬆️</div>
-          <h3>클릭해서 에디터에서 영상 올리기</h3>
-          <small>MP4, MOV, WEBM · 최대 2GB · 카드 등록 없이 매월 30분 무료</small>
-        </a>
-      </div>
-    </section>
-
-    <section id="features">
-      <div class="container">
-        <div class="section-head">
-          <span class="eyebrow">FEATURES</span>
-          <h2>편집에 필요한 모든 AI</h2>
-          <p>반복 작업은 AI에게 맡기고, 크리에이터는 콘텐츠에만 집중하세요.</p>
-        </div>
-        <div class="grid-3">
-          <div class="feature"><div class="ic">💬</div><h3>AI 자동 자막</h3><p>99% 정확도의 한국어 음성 인식으로 자막을 자동 생성하고 타이밍까지 맞춰 드려요.</p></div>
-          <div class="feature"><div class="ic">✂️</div><h3>AI 컷편집</h3><p>무음 구간, 말실수, "음…" 같은 군더더기를 찾아 한 번에 잘라냅니다.</p></div>
-          <div class="feature"><div class="ic">📱</div><h3>AI 숏폼 추출</h3><p>긴 영상에서 하이라이트를 찾아 9:16 쇼츠·릴스로 자동 변환합니다.</p></div>
-          <div class="feature"><div class="ic">🌏</div><h3>자막 번역</h3><p>영어, 일본어, 중국어 등 30개 언어로 번역해 글로벌 시청자에게 다가가세요.</p></div>
-          <div class="feature"><div class="ic">🎙️</div><h3>AI 보이스 · 더빙</h3><p>내 목소리 그대로 다른 언어로 더빙하거나, 자연스러운 AI 내레이션을 입혀 보세요.</p></div>
-          <div class="feature"><div class="ic">🎨</div><h3>템플릿 · 브랜드 키트</h3><p>자막 스타일, 로고, 인트로를 저장해 두고 모든 영상에 일관되게 적용하세요.</p></div>
-        </div>
+        <form class="source-box" id="sourceForm">
+          <div class="source-tabs">
+            <button type="button" class="on" data-src="file">📁 파일 업로드</button>
+            <button type="button" data-src="link">🔗 영상 링크</button>
+          </div>
+          <div class="source-body" data-pane="file">
+            <a href="editor.html" class="dropzone-inline">
+              <span>⬆️ 촬영본 선택하기</span>
+              <small>MP4 · MOV · WEBM · 편집 안 된 원본 그대로</small>
+            </a>
+          </div>
+          <div class="source-body" data-pane="link" hidden>
+            <div class="link-row">
+              <input type="url" id="linkInput" placeholder="https://youtube.com/watch?v=..." required />
+              <button class="btn btn-primary" type="submit">숏폼 만들기</button>
+            </div>
+            <small>유튜브 · 비메오 · 구글 드라이브 공유 링크 지원</small>
+          </div>
+        </form>
       </div>
     </section>
 
@@ -67,24 +59,57 @@
       <div class="container">
         <div class="section-head">
           <span class="eyebrow">HOW IT WORKS</span>
-          <h2>4단계면 업로드 준비 끝</h2>
+          <h2>올리고, 기다리면, 끝</h2>
+          <p>편집 툴을 몰라도 괜찮아요. 평균 5분이면 숏폼이 도착합니다.</p>
         </div>
         <div class="steps">
-          <div class="step"><h4>영상 업로드</h4><p>촬영한 원본을 그대로 올려 주세요.</p></div>
-          <div class="step"><h4>AI 자동 편집</h4><p>자막·컷편집·숏폼을 AI가 자동 생성합니다.</p></div>
-          <div class="step"><h4>간단 수정</h4><p>텍스트를 고치듯 자막과 컷을 다듬으세요.</p></div>
-          <div class="step"><h4>내보내기</h4><p>유튜브·인스타·틱톡 규격으로 바로 저장.</p></div>
+          <div class="step"><h4>촬영본 업로드</h4><p>파일을 올리거나 영상 링크를 붙여 넣으세요.</p></div>
+          <div class="step"><h4>구간 지정 (선택)</h4><p>분석할 시작·끝 시간을 정하면 그 안에서만 찾아요.</p></div>
+          <div class="step"><h4>AI 하이라이트 선별</h4><p>말의 밀도와 에너지를 분석해 핵심 장면을 골라요.</p></div>
+          <div class="step"><h4>숏폼 다운로드</h4><p>자막 입힌 9:16 영상을 받거나 SNS에 바로 올리세요.</p></div>
         </div>
       </div>
     </section>
 
-    <section>
+    <section id="features">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">FEATURES</span>
+          <h2>숏폼 한 편에 필요한 모든 것</h2>
+        </div>
+        <div class="grid-3">
+          <div class="feature"><div class="ic">✨</div><h3>하이라이트 자동 선별</h3><p>한 시간짜리 강의에서도 사람들이 끝까지 볼 만한 30~60초를 AI가 찾아냅니다.</p></div>
+          <div class="feature"><div class="ic">📱</div><h3>9:16 자동 리프레이밍</h3><p>가로 촬영본을 세로 화면에 맞게 자동으로 잘라 화자를 중앙에 둡니다.</p></div>
+          <div class="feature"><div class="ic">💬</div><h3>자동 자막</h3><p>한국어 음성을 인식해 읽기 좋은 길이로 자막을 나누고 스타일을 입혀요.</p></div>
+          <div class="feature"><div class="ic">🎯</div><h3>구간 지정</h3><p>Q&amp;A만, 2부만처럼 원하는 범위를 지정해 그 안에서만 숏폼을 만들 수 있어요.</p></div>
+          <div class="feature"><div class="ic">🧑‍🎨</div><h3>커스텀 페르소나</h3><p>채널 톤, 타깃 시청자, 금지어를 저장해 두면 제목과 선별 기준에 반영됩니다.</p></div>
+          <div class="feature"><div class="ic">🚀</div><h3>SNS 자동 업로드</h3><p>유튜브 쇼츠, 인스타그램 릴스, 틱톡에 예약 업로드까지 한 번에.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="usecases" style="padding-top: 0;">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">USE CASES</span>
+          <h2>이런 영상에 특히 강해요</h2>
+        </div>
+        <div class="usecases">
+          <div><b>🎓 온라인 강의</b><span>커리큘럼 영상을 맛보기 숏폼으로 만들어 수강생 모집</span></div>
+          <div><b>🎤 강연 · 세미나</b><span>행사 촬영본에서 명언 같은 한 마디만 쏙쏙</span></div>
+          <div><b>🎙️ 인터뷰 · 팟캐스트</b><span>긴 대화에서 반응 좋을 장면을 골라 클립으로</span></div>
+          <div><b>💼 웨비나 · 사내 교육</b><span>다시보기 대신 핵심만 담은 숏폼으로 공유</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section style="padding-top: 0;">
       <div class="container">
         <div class="stats">
-          <div class="stat"><b class="grad-text">12만+</b><span>누적 크리에이터</span></div>
-          <div class="stat"><b class="grad-text">87%</b><span>편집 시간 단축</span></div>
-          <div class="stat"><b class="grad-text">340만</b><span>생성된 자막 문장</span></div>
-          <div class="stat"><b class="grad-text">4.9★</b><span>사용자 만족도</span></div>
+          <div class="stat"><b class="grad-text">5분</b><span>평균 제작 시간</span></div>
+          <div class="stat"><b class="grad-text">90분</b><span>가입 즉시 무료 제공</span></div>
+          <div class="stat"><b class="grad-text">≈15개</b><span>무료로 만드는 숏폼</span></div>
+          <div class="stat"><b class="grad-text">0원</b><span>카드 등록 · 약정 없음</span></div>
         </div>
       </div>
     </section>
@@ -92,9 +117,9 @@
     <section style="padding-top: 0;">
       <div class="container">
         <div class="cta-box">
-          <h2>오늘 첫 영상을 AI로 편집해 보세요</h2>
-          <p>카드 등록 없이 매월 30분 무료</p>
-          <a href="editor.html" class="btn btn-lg">무료로 시작하기 →</a>
+          <h2>잠자는 촬영본, 오늘 숏폼으로 깨워 보세요</h2>
+          <p>회원가입만 하면 90분 무료 · 신용카드 필요 없음</p>
+          <a href="editor.html" class="btn btn-lg">무료로 숏폼 만들기 →</a>
         </div>
       </div>
     </section>
@@ -113,5 +138,16 @@
   <div class="toast" id="toast"></div>
 
   <script src="app.js"></script>
+  <script>
+    document.querySelectorAll('[data-src]').forEach((b) => b.addEventListener('click', () => {
+      document.querySelectorAll('[data-src]').forEach((x) => x.classList.toggle('on', x === b));
+      document.querySelectorAll('[data-pane]').forEach((p) => { p.hidden = p.dataset.pane !== b.dataset.src; });
+    }));
+    document.getElementById('sourceForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const url = document.getElementById('linkInput').value.trim();
+      location.href = 'editor.html?link=' + encodeURIComponent(url);
+    });
+  </script>
 </body>
 </html>

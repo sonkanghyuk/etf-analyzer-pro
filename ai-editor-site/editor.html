@@ -3,47 +3,52 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>에디터 | Clipora AI 편집</title>
+  <title>숏폼 만들기 | Clipora AI 숏폼</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   <link rel="stylesheet" href="style.css" />
   <style>
-    .editor { display: grid; grid-template-columns: 1fr 380px; gap: 20px; padding: 24px 0 48px; }
+    .editor { display: grid; grid-template-columns: 1fr 360px; gap: 20px; padding: 24px 0 48px; align-items: start; }
     .panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
+    .panel + .panel { margin-top: 20px; }
+    .panel h3 { font-size: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
     .stage { position: relative; aspect-ratio: 16/9; background: #000; border-radius: 12px; overflow: hidden; display: grid; place-items: center; }
-    .stage.vertical { aspect-ratio: 9/16; max-height: 70vh; margin-inline: auto; }
     .stage video { width: 100%; height: 100%; object-fit: contain; }
-    .stage.vertical video { object-fit: cover; }
-    .stage .empty { text-align: center; color: var(--muted); padding: 24px; }
-    .caption {
-      position: absolute; left: 50%; bottom: 8%; transform: translateX(-50%);
-      max-width: 90%; padding: 6px 14px; border-radius: 8px; text-align: center;
-      font-weight: 800; font-size: clamp(14px, 2.4vw, 24px); pointer-events: none;
-    }
-    .caption.s-box { background: rgba(0,0,0,.7); color: #fff; }
-    .caption.s-pop { color: #ffe14d; -webkit-text-stroke: 1.2px #000; paint-order: stroke fill; text-shadow: 0 3px 0 #000; }
-    .caption.s-clean { color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,.9); font-weight: 600; }
-    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-    .chip { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); font-size: 14px; font-weight: 600; }
-    .chip.on { border-color: var(--brand); background: rgba(124, 92, 255, .18); }
-    .timeline { position: relative; height: 46px; margin-top: 14px; background: var(--bg-2); border-radius: 10px; overflow: hidden; cursor: pointer; }
-    .timeline .seg { position: absolute; top: 8px; bottom: 8px; background: rgba(124, 92, 255, .55); border-radius: 4px; }
-    .timeline .cut { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(45deg, rgba(255,92,138,.35) 0 6px, transparent 6px 12px); }
+    .stage .empty { text-align: center; color: var(--muted); padding: 24px; cursor: pointer; }
+    .notice { padding: 10px 14px; border-radius: 10px; background: rgba(255, 196, 0, .12); border: 1px solid rgba(255, 196, 0, .35); font-size: 14px; margin-bottom: 12px; }
+    .timeline { position: relative; height: 44px; margin-top: 14px; background: var(--bg-2); border-radius: 10px; overflow: hidden; cursor: pointer; }
+    .timeline .range { position: absolute; top: 0; bottom: 0; background: rgba(0, 212, 200, .12); border-inline: 2px solid var(--brand-2); }
+    .timeline .clip { position: absolute; top: 9px; bottom: 9px; background: rgba(124, 92, 255, .65); border-radius: 4px; }
+    .timeline .clip.sel { background: var(--accent); }
     .timeline .head { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff; }
-    .side h3 { font-size: 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .usage { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
-    .bar { height: 6px; background: var(--bg-2); border-radius: 99px; overflow: hidden; margin-top: 6px; }
-    .bar i { display: block; height: 100%; background: var(--grad); }
-    .subs { display: grid; gap: 8px; max-height: 52vh; overflow-y: auto; padding-right: 4px; }
-    .sub { display: grid; grid-template-columns: 64px 1fr 24px; gap: 8px; align-items: center; padding: 8px; border-radius: 10px; border: 1px solid transparent; }
-    .sub.active { border-color: var(--brand); background: rgba(124,92,255,.1); }
-    .sub time { font-size: 12px; color: var(--brand-2); cursor: pointer; font-variant-numeric: tabular-nums; }
-    .sub input { width: 100%; background: transparent; border: 0; color: var(--text); font: inherit; font-size: 14px; padding: 4px; border-radius: 6px; }
-    .sub input:focus { outline: 1px solid var(--line); background: var(--bg-2); }
-    .sub button { color: var(--muted); }
+    .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; margin-top: 14px; }
+    .row label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+    .row input, .row select, .side input {
+      padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg-2); color: var(--text); font: inherit; font-size: 14px;
+    }
+    .row input { width: 92px; font-variant-numeric: tabular-nums; }
+    .row .grow { flex: 1; }
     .progress { margin-top: 12px; font-size: 14px; color: var(--muted); display: none; }
     .progress.show { display: block; }
-    .actions { display: grid; gap: 8px; margin-top: 14px; }
-    @media (max-width: 900px) { .editor { grid-template-columns: 1fr; } }
+    .progress .bar { margin-top: 6px; }
+    .clips { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+    .clip-card { text-align: left; padding: 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--bg-2); display: grid; gap: 4px; }
+    .clip-card.sel { border-color: var(--brand); background: rgba(124, 92, 255, .12); }
+    .clip-card b { font-size: 14px; line-height: 1.4; }
+    .clip-card span { font-size: 12px; color: var(--muted); }
+    .clip-card .score { color: var(--brand-2); font-weight: 700; }
+    .side { position: sticky; top: 84px; }
+    .preview { width: 100%; aspect-ratio: 9/16; border-radius: 14px; background: #000; display: block; }
+    .preview-controls { display: flex; gap: 8px; margin-top: 10px; }
+    .preview-controls .btn { flex: 1; }
+    .side .field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); margin-top: 14px; }
+    .caps { display: grid; gap: 6px; max-height: 220px; overflow-y: auto; margin-top: 6px; }
+    .cap { display: grid; grid-template-columns: 44px 1fr; gap: 6px; align-items: center; }
+    .cap time { font-size: 12px; color: var(--brand-2); cursor: pointer; font-variant-numeric: tabular-nums; }
+    .cap input { padding: 6px 8px; }
+    .cap.active input { border-color: var(--brand); }
+    .usage { font-size: 13px; color: var(--muted); }
+    .usage .bar { margin-top: 6px; }
+    @media (max-width: 900px) { .editor { grid-template-columns: 1fr; } .side { position: static; } }
   </style>
 </head>
 <body>
@@ -51,60 +56,67 @@
     <div class="container">
       <a href="index.html" class="logo"><span class="logo-mark">▶</span>Clipora</a>
       <nav class="nav" id="nav">
-        <a href="index.html#features">기능</a>
+        <a href="index.html#how">사용 방법</a>
+        <a href="template.html">템플릿</a>
+        <a href="contents.html">내 콘텐츠</a>
         <a href="pricing.html">요금제</a>
-        <a href="editor.html" class="active">에디터</a>
       </nav>
       <div class="header-cta">
-        <a href="pricing.html" class="btn btn-primary">업그레이드</a>
+        <a href="pricing.html" class="btn btn-ghost">업그레이드</a>
         <button class="menu-btn" aria-label="메뉴" data-menu>☰</button>
       </div>
     </div>
   </header>
 
   <main class="container editor">
-    <div class="panel">
-      <div class="stage" id="stage">
-        <label class="empty" id="empty" style="cursor:pointer">
-          <div style="font-size: 40px;">🎬</div>
-          <b style="color: var(--text);">영상을 선택하거나 끌어다 놓으세요</b><br />
-          <small>영상은 브라우저 안에서만 재생되며 서버로 업로드되지 않습니다</small>
-          <input type="file" accept="video/*" id="file" hidden />
-        </label>
-        <video id="video" controls playsinline hidden></video>
-        <div class="caption s-box" id="caption" hidden></div>
+    <div>
+      <div class="panel">
+        <div class="notice" id="linkNotice" hidden></div>
+        <div class="stage" id="stage">
+          <label class="empty" id="empty">
+            <div style="font-size: 40px;">🎬</div>
+            <b style="color: var(--text);">촬영본을 선택하거나 끌어다 놓으세요</b><br />
+            <small>강의 · 강연 · 인터뷰 원본 그대로 · 영상은 이 브라우저 밖으로 업로드되지 않아요</small>
+            <input type="file" accept="video/*" id="file" hidden />
+          </label>
+          <video id="video" controls playsinline hidden></video>
+        </div>
+        <div class="timeline" id="timeline" title="클릭해서 이동"></div>
+
+        <div class="row">
+          <label>구간 시작<input id="rStart" value="00:00" inputmode="numeric" /></label>
+          <button class="chip" id="setStart" title="현재 재생 위치를 시작으로">⤓ 현재 위치</button>
+          <label>구간 끝<input id="rEnd" value="00:00" inputmode="numeric" /></label>
+          <button class="chip" id="setEnd" title="현재 재생 위치를 끝으로">⤓ 현재 위치</button>
+          <label class="grow">템플릿<select id="tpl"></select></label>
+          <button class="btn btn-primary" id="make">✨ AI 숏폼 만들기</button>
+        </div>
+        <div class="progress" id="progress"><span id="progressText"></span><div class="bar"><i id="progressBar" style="width: 0%"></i></div></div>
       </div>
 
-      <div class="timeline" id="timeline" title="클릭해서 이동"></div>
-
-      <div class="toolbar">
-        <button class="chip" id="aiSub">💬 AI 자동 자막</button>
-        <button class="chip" id="aiCut">✂️ AI 컷편집</button>
-        <button class="chip" id="aiShort">📱 숏폼(9:16) 보기</button>
-        <span style="flex:1"></span>
-        <button class="chip on" data-style="s-box">박스</button>
-        <button class="chip" data-style="s-pop">예능</button>
-        <button class="chip" data-style="s-clean">깔끔</button>
+      <div class="panel">
+        <h3>AI가 고른 하이라이트 <span class="usage" id="usage"></span></h3>
+        <div class="clips" id="clips"><p style="color: var(--muted); font-size: 14px;">촬영본을 올리고 구간을 지정한 뒤 "AI 숏폼 만들기"를 눌러 보세요.</p></div>
       </div>
-      <div class="progress" id="progress"></div>
     </div>
 
     <aside class="panel side">
-      <div class="usage">
-        Free 플랜 · 이번 달 편집 시간 <b id="usedMin">0</b> / 30분
-        <div class="bar"><i id="usedBar" style="width:0%"></i></div>
+      <h3>9:16 미리보기 <a href="template.html" class="chip">템플릿 둘러보기</a></h3>
+      <canvas class="preview" id="preview" width="540" height="960"></canvas>
+      <div class="preview-controls">
+        <button class="btn btn-ghost" id="playClip">▶ 클립 재생</button>
       </div>
-      <h3>자막 <button class="chip" id="addSub">+ 현재 위치에 추가</button></h3>
-      <div class="subs" id="subs"><p style="color: var(--muted); font-size: 14px;">영상을 올리고 "AI 자동 자막"을 눌러 보세요.</p></div>
-      <div class="actions">
-        <button class="btn btn-primary" id="exportSrt">자막 파일(.srt) 내보내기</button>
-        <button class="btn btn-ghost" id="exportVideo">영상 내보내기</button>
-      </div>
+      <label class="field">숏폼 제목<input id="clipTitle" placeholder="하이라이트를 선택하세요" disabled /></label>
+      <div class="field">자막 <div class="caps" id="caps"></div></div>
+      <button class="btn btn-primary btn-block" id="export" style="margin-top: 16px;">⬇ 숏폼 내보내기</button>
+      <p class="usage" style="margin-top: 8px;">Free 플랜은 워터마크가 들어가요 · 클립 길이만큼 실시간으로 렌더링됩니다</p>
     </aside>
   </main>
   <div class="toast" id="toast"></div>
 
   <script src="app.js"></script>
+  <script src="templates.js"></script>
+  <script src="store.js"></script>
   <script src="editor.js"></script>
 </body>
 </html>

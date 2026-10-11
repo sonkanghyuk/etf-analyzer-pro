@@ -1,50 +1,87 @@
-// 에디터 데모
-// - 무음 구간 감지(AI 컷편집)와 발화 구간 분할은 Web Audio로 브라우저에서 실제 계산합니다.
-// - 자막 "텍스트"는 음성인식(STT) 서버가 필요하므로 데모 문장으로 채웁니다.
-//   실서비스에서는 transcribe()를 Whisper 등 STT API 호출로 바꾸면 됩니다.
+// 숏폼 에디터
+// - 발화 구간 감지와 하이라이트 선별은 Web Audio로 브라우저에서 실제 계산합니다
+//   (말이 끊김 없이 이어지는 비율 60% + 목소리 에너지 40%로 점수화).
+// - 자막 "텍스트"와 제목은 음성인식(STT)/LLM 서버가 필요하므로 데모 문장으로 채웁니다.
+//   실서비스에서는 transcribe()와 suggestTitle()을 API 호출로 바꾸면 됩니다.
+// - 내보내기는 템플릿을 입힌 9:16 캔버스를 MediaRecorder로 녹화해 실제 WebM 파일을 만듭니다.
 
 const $ = (id) => document.getElementById(id);
 const video = $('video');
-const stage = $('stage');
-const caption = $('caption');
-const FREE_MINUTES = 30;
-
-let subs = [];      // { start, end, text }
-let cuts = [];      // { start, end } — 재생 시 건너뛸 무음 구간
-let speech = null;  // 발화 구간 캐시
-let audioBuffer = null;
-let fileName = 'video';
-let usedSec = 0;
+const preview = $('preview');
+const pctx = preview.getContext('2d');
+const STEP = 0.1; // 오디오 분석 단위(초)
 
 const DEMO_LINES = [
-  '안녕하세요 여러분, 오늘도 영상 찾아와 주셔서 감사합니다',
-  '오늘은 정말 유용한 꿀팁을 준비해 봤는데요',
-  '바로 본론으로 들어가 보겠습니다',
-  '첫 번째는 생각보다 정말 간단해요',
-  '이 부분은 꼭 기억해 두시면 좋겠어요',
-  '두 번째 방법은 조금 더 응용된 버전입니다',
-  '여기서 많은 분들이 실수를 하시는데요',
-  '이렇게만 하면 시간을 절반으로 줄일 수 있어요',
-  '마지막으로 정리해 보면',
-  '영상이 도움이 되셨다면 구독과 좋아요 부탁드려요',
+  '여러분 이거 하나만 기억하시면 됩니다', '대부분 여기서 실수를 하세요', '생각보다 정말 간단한 방법이에요',
+  '제가 10년 동안 해 보고 깨달은 건', '결국 중요한 건 꾸준함입니다', '이 질문을 정말 많이 받는데요',
+  '핵심은 딱 세 가지예요', '처음엔 저도 몰랐어요', '이렇게 하면 시간이 절반으로 줄어요', '오늘 이것만 가져가셔도 충분합니다',
+];
+const DEMO_TITLES = [
+  '이거 모르면 계속 손해 봅니다', '10년 차가 알려주는 진짜 핵심', '다들 여기서 실수합니다',
+  '딱 3가지만 기억하세요', '질문 1위, 드디어 답합니다', '이 한 마디에 다 담겨 있어요',
 ];
 
-const fmt = (t, srt = false) => {
-  const h = Math.floor(t / 3600), m = Math.floor(t / 60) % 60, s = Math.floor(t % 60);
-  const ms = Math.floor((t % 1) * 1000);
-  const p = (n, w = 2) => String(n).padStart(w, '0');
-  return srt ? `${p(h)}:${p(m)}:${p(s)},${p(ms, 3)}` : `${p(m)}:${p(s)}.${Math.floor(ms / 100)}`;
-};
+let fileName = '';
+let audioBuffer = null;
+let rms = null;
+let clips = [];
+let sel = -1;
+let tpl = getTemplate(new URLSearchParams(location.search).get('template') || Store.template());
+let clipPlaying = false;
+let exporting = null;
 
-// ---------- 파일 로드 ----------
+// 미리보기·녹화가 원본 소리를 받도록 오디오 경로를 한 번만 연결합니다.
+let actx, audioDest;
+function ensureAudioGraph() {
+  if (actx) { actx.resume(); return; }
+  try {
+    actx = new (window.AudioContext || window.webkitAudioContext)();
+    const src = actx.createMediaElementSource(video);
+    audioDest = actx.createMediaStreamDestination();
+    src.connect(actx.destination);
+    src.connect(audioDest);
+  } catch (_) { actx = null; }
+}
+
+const fmt = (t) => {
+  t = Math.max(0, t || 0);
+  return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+};
+const parseTime = (s) => {
+  const parts = String(s).trim().split(':').map(Number);
+  if (parts.some(isNaN)) return NaN;
+  return parts.reduce((a, b) => a * 60 + b, 0);
+};
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+// ---------- 시작 ----------
+$('tpl').innerHTML = TEMPLATES.map((t) => `<option value="${t.id}">${t.name}</option>`).join('');
+$('tpl').value = tpl.id;
+$('tpl').addEventListener('change', () => { tpl = getTemplate($('tpl').value); Store.template(tpl.id); });
+
+const link = new URLSearchParams(location.search).get('link');
+if (link) {
+  $('linkNotice').hidden = false;
+  $('linkNotice').textContent = `🔗 ${link} — 링크로 가져오기는 서버 연동이 필요해요. 데모에서는 영상 파일을 직접 올려 주세요.`;
+}
+
+function renderUsage() {
+  const used = Math.ceil(Store.usedSec() / 60);
+  $('usage').textContent = `무료 시간 ${Math.max(0, FREE_MINUTES - used)}분 남음`;
+}
+renderUsage();
+
+// ---------- 파일 ----------
 function loadFile(file) {
   if (!file || !file.type.startsWith('video/')) { toast('영상 파일만 올릴 수 있어요'); return; }
-  fileName = file.name.replace(/\.[^.]+$/, '');
+  ensureAudioGraph();
+  fileName = file.name;
   video.src = URL.createObjectURL(file);
   video.hidden = false;
   $('empty').hidden = true;
-  subs = []; cuts = []; speech = null; audioBuffer = null;
-  renderSubs(); renderTimeline();
+  $('linkNotice').hidden = true;
+  audioBuffer = null; rms = null; clips = []; sel = -1;
+  renderClips(); selectClip(-1);
   decodeAudio(file);
 }
 
@@ -53,203 +90,326 @@ async function decodeAudio(file) {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     audioBuffer = await ctx.decodeAudioData(await file.arrayBuffer());
     ctx.close();
-  } catch (_) {
-    audioBuffer = null; // 오디오 트랙이 없거나 디코딩 불가 → 균등 분할로 대체
-  }
+  } catch (_) { audioBuffer = null; }
 }
 
 $('file').addEventListener('change', (e) => loadFile(e.target.files[0]));
-['dragenter', 'dragover'].forEach((t) => stage.addEventListener(t, (e) => e.preventDefault()));
-stage.addEventListener('drop', (e) => { e.preventDefault(); loadFile(e.dataTransfer.files[0]); });
+['dragenter', 'dragover'].forEach((t) => $('stage').addEventListener(t, (e) => e.preventDefault()));
+$('stage').addEventListener('drop', (e) => { e.preventDefault(); loadFile(e.dataTransfer.files[0]); });
+
+video.addEventListener('loadedmetadata', () => {
+  $('rStart').value = fmt(0);
+  $('rEnd').value = fmt(video.duration);
+  renderTimeline();
+});
+
+$('setStart').addEventListener('click', () => { $('rStart').value = fmt(video.currentTime); renderTimeline(); });
+$('setEnd').addEventListener('click', () => { $('rEnd').value = fmt(video.currentTime); renderTimeline(); });
+['rStart', 'rEnd'].forEach((id) => $(id).addEventListener('change', renderTimeline));
+
+function getRange() {
+  const dur = video.duration || 0;
+  let s = parseTime($('rStart').value), e = parseTime($('rEnd').value);
+  if (isNaN(s)) s = 0;
+  if (isNaN(e) || e <= 0) e = dur;
+  s = clamp(s, 0, dur); e = clamp(e, 0, dur);
+  return { start: Math.min(s, e), end: Math.max(s, e) };
+}
 
 // ---------- 오디오 분석 ----------
-// 100ms 단위 RMS로 발화/무음 구간을 나눕니다.
-function detectSpeech() {
-  const dur = video.duration;
+function computeRms() {
+  if (rms) return rms;
   if (!audioBuffer) {
-    const out = [];
-    for (let t = 0; t < dur; t += 3) out.push({ start: t, end: Math.min(t + 2.8, dur) });
-    return out;
+    // 소리가 없거나 디코딩 불가: 3초 말하고 0.6초 쉬는 패턴으로 가정
+    const n = Math.ceil(video.duration / STEP);
+    rms = Float32Array.from({ length: n }, (_, i) => ((i * STEP) % 3.6 < 3 ? 0.2 : 0));
+    return rms;
   }
   const data = audioBuffer.getChannelData(0);
-  const rate = audioBuffer.sampleRate;
-  const win = Math.floor(rate * 0.1);
-  const rms = [];
-  for (let i = 0; i < data.length; i += win) {
+  const win = Math.floor(audioBuffer.sampleRate * STEP);
+  rms = new Float32Array(Math.ceil(data.length / win));
+  for (let k = 0; k < rms.length; k++) {
     let sum = 0;
-    const end = Math.min(i + win, data.length);
-    for (let j = i; j < end; j++) sum += data[j] * data[j];
-    rms.push(Math.sqrt(sum / (end - i)));
+    const s = k * win, e = Math.min(s + win, data.length);
+    for (let j = s; j < e; j++) sum += data[j] * data[j];
+    rms[k] = Math.sqrt(sum / Math.max(1, e - s));
   }
-  const sorted = [...rms].sort((a, b) => a - b);
-  const threshold = Math.max(0.01, sorted[Math.floor(sorted.length * 0.2)] * 2.5);
+  return rms;
+}
 
+// 발화 구간: 0.5초 이상 조용하면 문장이 끝난 것으로 봅니다.
+function detectSpeech(start, end) {
+  const r = computeRms();
+  const i0 = Math.floor(start / STEP), i1 = Math.min(r.length, Math.ceil(end / STEP));
+  const slice = Array.from(r.slice(i0, i1)).sort((a, b) => a - b);
+  const threshold = Math.max(0.01, (slice[Math.floor(slice.length * 0.2)] || 0) * 2.5);
   const segs = [];
-  let start = null, quiet = 0;
-  rms.forEach((v, i) => {
-    const t = i * 0.1;
-    if (v > threshold) {
-      if (start === null) start = t;
-      quiet = 0;
-    } else if (start !== null && ++quiet >= 5) { // 0.5초 이상 조용하면 문장 끝
-      segs.push({ start, end: t - 0.4 });
-      start = null; quiet = 0;
-    }
-  });
-  if (start !== null) segs.push({ start, end: rms.length * 0.1 });
-
-  // 너무 긴 구간은 4초 단위로 쪼개고, 너무 짧은 잡음은 버립니다.
-  return segs.filter((s) => s.end - s.start > 0.3).flatMap((s) => {
-    const parts = [];
-    for (let t = s.start; t < s.end; t += 4) parts.push({ start: t, end: Math.min(t + 4, s.end) });
-    return parts;
-  });
-}
-
-function transcribe(segments) {
-  return segments.map((s, i) => ({ ...s, text: DEMO_LINES[i % DEMO_LINES.length] }));
-}
-
-function requireVideo() {
-  if (!video.src || !video.duration) { toast('먼저 영상을 올려 주세요'); return false; }
-  return true;
-}
-
-function chargeUsage() {
-  if (usedSec) return true; // 같은 영상 재편집은 차감하지 않음
-  const need = video.duration;
-  if (need / 60 > FREE_MINUTES) { toast(`Free 플랜은 ${FREE_MINUTES}분까지 편집할 수 있어요`); return false; }
-  usedSec = need;
-  const min = Math.ceil(need / 60);
-  $('usedMin').textContent = min;
-  $('usedBar').style.width = Math.min(100, (min / FREE_MINUTES) * 100) + '%';
-  return true;
-}
-
-async function runAI(label, fn) {
-  const p = $('progress');
-  p.classList.add('show');
-  for (const pct of [12, 37, 64, 88, 100]) {
-    p.textContent = `🤖 ${label} 중… ${pct}%`;
-    await new Promise((r) => setTimeout(r, 260));
+  let s = null, quiet = 0;
+  for (let i = i0; i < i1; i++) {
+    if (r[i] > threshold) { if (s === null) s = i; quiet = 0; }
+    else if (s !== null && ++quiet >= 5) { segs.push({ start: s * STEP, end: (i - 4) * STEP }); s = null; quiet = 0; }
   }
-  fn();
-  p.classList.remove('show');
+  if (s !== null) segs.push({ start: s * STEP, end: i1 * STEP });
+  return { segs: segs.filter((x) => x.end - x.start > 0.3), threshold };
 }
 
-$('aiSub').addEventListener('click', () => {
-  if (!requireVideo() || !chargeUsage()) return;
-  runAI('음성 분석 및 자막 생성', () => {
-    speech = speech || detectSpeech();
-    subs = transcribe(speech);
-    renderSubs(); renderTimeline();
-    $('aiSub').classList.add('on');
-    toast(`자막 ${subs.length}개를 생성했어요 (데모 문장 — 직접 수정 가능)`);
-  });
-});
+function pickHighlights(start, end) {
+  const r = computeRms();
+  const { segs, threshold } = detectSpeech(start, end);
+  const dur = end - start;
+  const L = clamp(dur / 3, 3, 45);
+  const N = Math.min(10, Math.max(1, Math.round(dur / 300), Math.min(3, Math.floor(dur / (L * 1.2)))));
 
-$('aiCut').addEventListener('click', () => {
-  if (!requireVideo()) return;
-  if (cuts.length) { cuts = []; $('aiCut').classList.remove('on'); renderTimeline(); toast('컷편집을 해제했어요'); return; }
-  if (!chargeUsage()) return;
-  runAI('무음 구간 탐지', () => {
-    speech = speech || detectSpeech();
-    const dur = video.duration;
-    let prev = 0;
-    cuts = [];
-    speech.forEach((s) => { if (s.start - prev > 0.7) cuts.push({ start: prev + 0.15, end: s.start - 0.15 }); prev = s.end; });
-    if (dur - prev > 0.7) cuts.push({ start: prev + 0.15, end: dur });
-    const saved = cuts.reduce((a, c) => a + c.end - c.start, 0);
-    $('aiCut').classList.toggle('on', cuts.length > 0);
-    renderTimeline();
-    toast(cuts.length ? `무음 ${cuts.length}곳, ${saved.toFixed(1)}초를 잘라냈어요` : '잘라낼 무음 구간이 없어요');
-  });
-});
+  // 누적합으로 구간별 발화 비율·평균 에너지를 빠르게 계산
+  const i0 = Math.floor(start / STEP), i1 = Math.min(r.length, Math.ceil(end / STEP));
+  const speechPre = [0], energyPre = [0];
+  let maxE = 1e-6;
+  for (let i = i0; i < i1; i++) {
+    speechPre.push(speechPre[speechPre.length - 1] + (r[i] > threshold ? 1 : 0));
+    energyPre.push(energyPre[energyPre.length - 1] + r[i]);
+    maxE = Math.max(maxE, r[i]);
+  }
+  const w = Math.round(L / STEP);
+  const cands = [];
+  for (let k = 0; k + w <= i1 - i0; k += 5) {
+    const speechRatio = (speechPre[k + w] - speechPre[k]) / w;
+    const energy = (energyPre[k + w] - energyPre[k]) / w / maxE;
+    cands.push({ start: start + k * STEP, score: 0.6 * speechRatio + 0.4 * energy });
+  }
+  cands.sort((a, b) => b.score - a.score);
 
-$('aiShort').addEventListener('click', () => {
-  if (!requireVideo()) return;
-  stage.classList.toggle('vertical');
-  $('aiShort').classList.toggle('on');
-});
-
-document.querySelectorAll('[data-style]').forEach((b) => b.addEventListener('click', () => {
-  document.querySelectorAll('[data-style]').forEach((x) => x.classList.toggle('on', x === b));
-  caption.className = 'caption ' + b.dataset.style;
-}));
-
-// ---------- 자막 목록 ----------
-function renderSubs() {
-  const box = $('subs');
-  if (!subs.length) { box.innerHTML = '<p style="color: var(--muted); font-size: 14px;">영상을 올리고 "AI 자동 자막"을 눌러 보세요.</p>'; return; }
-  box.innerHTML = subs.map((s, i) => `
-    <div class="sub" data-i="${i}">
-      <time data-seek="${s.start}">${fmt(s.start)}</time>
-      <input value="${s.text.replace(/"/g, '&quot;')}" data-edit="${i}" />
-      <button data-del="${i}" aria-label="삭제">✕</button>
-    </div>`).join('');
+  const picked = [];
+  for (const c of cands) {
+    if (picked.length >= N) break;
+    // 문장 중간에서 시작/끝나지 않도록 가까운 발화 경계에 맞춥니다.
+    const near = segs.find((s) => Math.abs(s.start - c.start) <= 2);
+    const s = clamp(near ? Math.max(start, near.start - 0.2) : c.start, start, end - 1);
+    let e = s + L;
+    const endSeg = segs.find((x) => Math.abs(x.end - e) <= 2);
+    e = clamp(endSeg ? endSeg.end + 0.3 : e, s + 1, end);
+    if (picked.every((p) => e + 0.5 <= p.start || s >= p.end + 0.5)) picked.push({ start: s, end: e, raw: c.score });
+  }
+  return { clips: picked.sort((a, b) => a.start - b.start), segs };
 }
 
-$('subs').addEventListener('click', (e) => {
-  if (e.target.dataset.seek) video.currentTime = +e.target.dataset.seek;
-  if (e.target.dataset.del) { subs.splice(+e.target.dataset.del, 1); renderSubs(); renderTimeline(); }
-});
-$('subs').addEventListener('input', (e) => {
-  if (e.target.dataset.edit) subs[+e.target.dataset.edit].text = e.target.value;
+function transcribe(clip, segs, offset) {
+  const caps = [];
+  segs.forEach((s) => {
+    const a = Math.max(s.start, clip.start), b = Math.min(s.end, clip.end);
+    for (let t = a; t < b - 0.2; t += 3) caps.push({ start: t, end: Math.min(t + 3, b), text: '' });
+  });
+  if (!caps.length) caps.push({ start: clip.start, end: clip.end, text: '' });
+  caps.forEach((c, i) => { c.text = DEMO_LINES[(offset + i) % DEMO_LINES.length]; });
+  return caps;
+}
+const suggestTitle = (i) => DEMO_TITLES[i % DEMO_TITLES.length];
+
+// ---------- AI 숏폼 만들기 ----------
+async function progress(steps) {
+  $('progress').classList.add('show');
+  for (let i = 0; i < steps.length; i++) {
+    $('progressText').textContent = `🤖 ${steps[i]}…`;
+    $('progressBar').style.width = ((i + 1) / steps.length) * 100 + '%';
+    await new Promise((r) => setTimeout(r, 450));
+  }
+  $('progress').classList.remove('show');
+}
+
+$('make').addEventListener('click', async () => {
+  if (!video.duration) { toast('먼저 촬영본을 올려 주세요'); return; }
+  const { start, end } = getRange();
+  if (end - start < 3) { toast('구간을 3초 이상으로 지정해 주세요'); return; }
+  if (Store.usedSec() + (end - start) > FREE_MINUTES * 60) {
+    toast('무료 시간이 부족해요. 구간을 줄이거나 플랜을 업그레이드해 주세요'); return;
+  }
+  if (!audioBuffer && !rms) await new Promise((r) => setTimeout(r, 300)); // 디코딩 대기 여유
+  $('make').disabled = true;
+  await progress(['음성 분석', '하이라이트 탐색', '자막 생성', '템플릿 적용']);
+  const { clips: found, segs } = pickHighlights(start, end);
+  let offset = 0;
+  clips = found.map((c, i) => {
+    const captions = transcribe(c, segs, offset);
+    offset += captions.length;
+    return { ...c, score: Math.min(99, Math.round(55 + 44 * c.raw)), title: suggestTitle(i), captions };
+  });
+  Store.addUsed(end - start);
+  renderUsage();
+  $('make').disabled = false;
+  renderClips();
+  selectClip(0);
+  toast(`하이라이트 ${clips.length}개를 찾았어요 (자막·제목은 데모 문장)`);
 });
 
-$('addSub').addEventListener('click', () => {
-  if (!requireVideo()) return;
-  const t = video.currentTime;
-  subs.push({ start: t, end: Math.min(t + 2.5, video.duration), text: '새 자막' });
-  subs.sort((a, b) => a.start - b.start);
-  renderSubs(); renderTimeline();
-});
+// ---------- 클립 목록 / 선택 ----------
+function renderClips() {
+  if (!clips.length) {
+    $('clips').innerHTML = '<p style="color: var(--muted); font-size: 14px;">촬영본을 올리고 구간을 지정한 뒤 "AI 숏폼 만들기"를 눌러 보세요.</p>';
+  } else {
+    $('clips').innerHTML = clips.map((c, i) => `
+      <button class="clip-card ${i === sel ? 'sel' : ''}" data-clip="${i}">
+        <span class="score">AI ${c.score}점</span>
+        <b>${c.title.replace(/</g, '&lt;')}</b>
+        <span>${fmt(c.start)} – ${fmt(c.end)} · ${Math.round(c.end - c.start)}초</span>
+      </button>`).join('');
+  }
+  renderTimeline();
+}
 
-// ---------- 타임라인 / 재생 ----------
+function selectClip(i) {
+  sel = i;
+  const c = clips[i];
+  $('clipTitle').disabled = !c;
+  $('clipTitle').value = c ? c.title : '';
+  $('caps').innerHTML = c ? c.captions.map((cap, k) => `
+    <div class="cap" data-k="${k}"><time data-seek="${cap.start}">${fmt(cap.start)}</time><input value="${cap.text.replace(/"/g, '&quot;')}" data-cap="${k}" /></div>`).join('')
+    : '<span style="font-size: 13px;">하이라이트를 선택하면 자막을 수정할 수 있어요.</span>';
+  if (c) video.currentTime = c.start;
+  document.querySelectorAll('.clip-card').forEach((el) => el.classList.toggle('sel', +el.dataset.clip === i));
+  renderTimeline();
+}
+
+$('clips').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-clip]');
+  if (b && !exporting) { stopClip(); selectClip(+b.dataset.clip); }
+});
+$('clipTitle').addEventListener('input', () => {
+  if (!clips[sel]) return;
+  clips[sel].title = $('clipTitle').value;
+  const card = document.querySelector(`[data-clip="${sel}"] b`);
+  if (card) card.textContent = clips[sel].title;
+});
+$('caps').addEventListener('input', (e) => { if (e.target.dataset.cap) clips[sel].captions[+e.target.dataset.cap].text = e.target.value; });
+$('caps').addEventListener('click', (e) => { if (e.target.dataset.seek) video.currentTime = +e.target.dataset.seek; });
+
+// ---------- 재생 ----------
+function playClip() {
+  const c = clips[sel];
+  if (!c) { toast('하이라이트를 먼저 선택하세요'); return; }
+  ensureAudioGraph();
+  if (video.currentTime < c.start || video.currentTime >= c.end - 0.1) video.currentTime = c.start;
+  clipPlaying = true;
+  $('playClip').textContent = '❚❚ 일시정지';
+  video.play();
+}
+function stopClip() {
+  clipPlaying = false;
+  $('playClip').textContent = '▶ 클립 재생';
+  if (!exporting) video.pause();
+}
+$('playClip').addEventListener('click', () => (clipPlaying ? stopClip() : playClip()));
+video.addEventListener('pause', () => { if (clipPlaying && !exporting) stopClip(); });
+
+// ---------- 타임라인 ----------
 function renderTimeline() {
-  const tl = $('timeline');
   const dur = video.duration || 1;
   const pct = (t) => (t / dur) * 100 + '%';
-  tl.innerHTML =
-    subs.map((s) => `<div class="seg" style="left:${pct(s.start)};width:${pct(s.end - s.start)}"></div>`).join('') +
-    cuts.map((c) => `<div class="cut" style="left:${pct(c.start)};width:${pct(c.end - c.start)}"></div>`).join('') +
+  const r = video.duration ? getRange() : { start: 0, end: 0 };
+  $('timeline').innerHTML =
+    (video.duration ? `<div class="range" style="left:${pct(r.start)};width:${pct(r.end - r.start)}"></div>` : '') +
+    clips.map((c, i) => `<div class="clip ${i === sel ? 'sel' : ''}" style="left:${pct(c.start)};width:${pct(c.end - c.start)}"></div>`).join('') +
     `<div class="head" id="head" style="left:${pct(video.currentTime || 0)}"></div>`;
 }
-
 $('timeline').addEventListener('click', (e) => {
-  if (!video.duration) return;
+  if (!video.duration || exporting) return;
   const r = e.currentTarget.getBoundingClientRect();
   video.currentTime = ((e.clientX - r.left) / r.width) * video.duration;
 });
 
-video.addEventListener('loadedmetadata', renderTimeline);
-video.addEventListener('timeupdate', () => {
-  const t = video.currentTime;
-  const cut = cuts.find((c) => t >= c.start && t < c.end);
-  if (cut && !video.paused) { video.currentTime = cut.end; return; }
+// ---------- 렌더 루프 ----------
+const exportCanvas = document.createElement('canvas');
+exportCanvas.width = 720; exportCanvas.height = 1280;
+const ectx = exportCanvas.getContext('2d');
 
-  const idx = subs.findIndex((s) => t >= s.start && t <= s.end);
-  caption.hidden = idx < 0;
-  if (idx >= 0) caption.textContent = subs[idx].text;
-  document.querySelectorAll('.sub').forEach((el) => el.classList.toggle('active', +el.dataset.i === idx));
+function currentCaption(t) {
+  const c = clips[sel];
+  if (!c || t < c.start || t > c.end) return '';
+  const cap = c.captions.find((x) => t >= x.start && t <= x.end);
+  return cap ? cap.text : '';
+}
+
+function frame() {
+  const t = video.currentTime;
+  const c = clips[sel];
+  if (c && (clipPlaying || exporting) && t >= c.end) {
+    if (exporting) exporting.finish();
+    else { stopClip(); video.currentTime = c.start; }
+  }
+  const opts = {
+    source: video.readyState >= 2 ? video : null,
+    tpl, title: c ? c.title : '하이라이트를 선택하세요', caption: currentCaption(t), watermark: true,
+  };
+  renderFrame(pctx, 540, 960, opts);
+  if (exporting) {
+    renderFrame(ectx, 720, 1280, opts);
+    const p = c ? (t - c.start) / (c.end - c.start) : 0;
+    $('progressBar').style.width = clamp(p, 0, 1) * 100 + '%';
+    $('progressText').textContent = `🎞️ 숏폼 렌더링 중… ${Math.round(clamp(p, 0, 1) * 100)}%`;
+  }
   const head = $('head');
-  if (head) head.style.left = (t / video.duration) * 100 + '%';
-});
+  if (head && video.duration) head.style.left = (t / video.duration) * 100 + '%';
+  document.querySelectorAll('.cap').forEach((el) => {
+    const cap = c && c.captions[+el.dataset.k];
+    el.classList.toggle('active', !!cap && t >= cap.start && t <= cap.end);
+  });
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
 
 // ---------- 내보내기 ----------
-$('exportSrt').addEventListener('click', () => {
-  if (!subs.length) { toast('내보낼 자막이 없어요'); return; }
-  const srt = subs.map((s, i) => `${i + 1}\n${fmt(s.start, true)} --> ${fmt(s.end, true)}\n${s.text}\n`).join('\n');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([srt], { type: 'text/plain;charset=utf-8' }));
-  a.download = `${fileName}.srt`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-  toast('SRT 파일을 저장했어요');
-});
+function pickMime() {
+  const list = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4'];
+  return list.find((m) => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || '';
+}
 
-$('exportVideo').addEventListener('click', () => {
-  if (!requireVideo()) return;
-  toast('영상 렌더링은 Basic 플랜부터 가능해요');
-  setTimeout(() => { location.href = 'pricing.html'; }, 1200);
+$('export').addEventListener('click', async () => {
+  const c = clips[sel];
+  if (!c) { toast('내보낼 하이라이트를 선택하세요'); return; }
+  if (exporting) return;
+  if (!window.MediaRecorder || !exportCanvas.captureStream) { toast('이 브라우저는 영상 내보내기를 지원하지 않아요 (Chrome 권장)'); return; }
+  ensureAudioGraph();
+
+  const stream = exportCanvas.captureStream(30);
+  if (audioDest) audioDest.stream.getAudioTracks().forEach((tr) => stream.addTrack(tr));
+  const mime = pickMime();
+  const rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 4_000_000 } : undefined);
+  const chunks = [];
+  rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+
+  clipPlaying = false;
+  video.pause();
+  video.currentTime = c.start;
+  await new Promise((r) => video.addEventListener('seeked', r, { once: true }));
+  renderFrame(ectx, 720, 1280, { source: video, tpl, title: c.title, caption: currentCaption(c.start), watermark: true });
+  const thumbCanvas = document.createElement('canvas');
+  thumbCanvas.width = 270; thumbCanvas.height = 480;
+  thumbCanvas.getContext('2d').drawImage(exportCanvas, 0, 0, 270, 480);
+  const thumb = thumbCanvas.toDataURL('image/jpeg', 0.75);
+
+  document.querySelectorAll('#make, #export, #playClip').forEach((b) => { b.disabled = true; });
+  $('progress').classList.add('show');
+
+  const done = new Promise((resolve) => { rec.onstop = resolve; });
+  exporting = {
+    finish() {
+      if (rec.state !== 'inactive') rec.stop();
+      video.pause();
+    },
+  };
+  rec.start(250);
+  try { await video.play(); } catch (_) { exporting.finish(); }
+  await done;
+  exporting = null;
+  $('progress').classList.remove('show');
+  document.querySelectorAll('#make, #export, #playClip').forEach((b) => { b.disabled = false; });
+
+  const blob = new Blob(chunks, { type: (mime || 'video/webm').split(';')[0] });
+  if (!blob.size) { toast('렌더링에 실패했어요. 다시 시도해 주세요'); return; }
+  await Store.add({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    title: c.title, templateId: tpl.id, sourceName: fileName,
+    start: c.start, end: c.end, duration: c.end - c.start, score: c.score,
+    createdAt: Date.now(), blob, thumb,
+  });
+  toast('숏폼을 저장했어요 → 내 콘텐츠');
+  setTimeout(() => { if (confirm('숏폼이 저장됐어요. 내 콘텐츠로 이동할까요?')) location.href = 'contents.html'; }, 400);
 });

@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>요금제 | Clipora AI 편집</title>
-  <meta name="description" content="Clipora AI 영상 편집 요금제 — 무료로 시작하고 필요한 만큼 업그레이드하세요." />
+  <title>요금제 | Clipora AI 숏폼</title>
+  <meta name="description" content="Clipora AI 숏폼 자동 제작 요금제 — 가입 즉시 90분 무료, 월 9,900원부터." />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -13,10 +13,10 @@
     <div class="container">
       <a href="index.html" class="logo"><span class="logo-mark">▶</span>Clipora</a>
       <nav class="nav" id="nav">
-        <a href="index.html#features">기능</a>
         <a href="index.html#how">사용 방법</a>
+        <a href="template.html">템플릿</a>
+        <a href="contents.html">내 콘텐츠</a>
         <a href="pricing.html" class="active">요금제</a>
-        <a href="editor.html">에디터</a>
       </nav>
       <div class="header-cta">
         <a href="#" class="btn btn-ghost" data-login>로그인</a>
@@ -29,13 +29,9 @@
   <main>
     <section class="hero" style="padding-bottom: 32px;">
       <div class="container">
-        <span class="badge">🎉 연간 결제 시 <b>최대 30% 할인</b></span>
-        <h1>크리에이터를 위한<br /><span class="grad-text">합리적인 요금제</span></h1>
-        <p>무료로 시작하고, 채널이 성장하는 만큼 업그레이드하세요. 언제든 해지할 수 있어요.</p>
-        <div class="billing-toggle" role="tablist">
-          <button class="on" data-billing="monthly">월간 결제</button>
-          <button data-billing="yearly">연간 결제<span class="save">-30%</span></button>
-        </div>
+        <span class="badge">🎁 가입 즉시 <b>90분 무료</b> · 카드 등록 불필요</span>
+        <h1>외주 숏폼 한 편 값으로<br /><span class="grad-text">한 달 내내 숏폼을</span></h1>
+        <p>원본 영상 길이(분) 기준으로 차감돼요. 약정 없이 언제든 해지할 수 있어요.</p>
       </div>
     </section>
 
@@ -47,19 +43,20 @@
         <div class="calc">
           <div>
             <h3 style="margin-bottom: 6px;">나에게 맞는 플랜 찾기</h3>
-            <p style="color: var(--muted); margin-bottom: 24px; font-size: 14px;">한 달에 편집할 영상 양을 입력하면 적합한 플랜을 추천해 드려요.</p>
+            <p style="color: var(--muted); margin-bottom: 24px; font-size: 14px;">촬영본 분량을 입력하면 필요한 시간과 만들 수 있는 숏폼 수를 알려드려요.</p>
             <div class="row">
-              <label>월 업로드 영상 수 <output id="countOut">8개</output></label>
-              <input type="range" id="count" min="1" max="100" value="8" />
+              <label>한 달에 올릴 촬영본 <output id="countOut">4편</output></label>
+              <input type="range" id="count" min="1" max="40" value="4" />
             </div>
             <div class="row">
-              <label>영상당 평균 길이 <output id="lenOut">10분</output></label>
-              <input type="range" id="len" min="1" max="60" value="10" />
+              <label>촬영본 평균 길이 <output id="lenOut">40분</output></label>
+              <input type="range" id="len" min="5" max="180" step="5" value="40" />
             </div>
           </div>
           <div class="calc-result">
-            <span>필요한 편집 시간</span>
-            <b id="needMin">80분 / 월</b>
+            <span>필요한 분석 시간</span>
+            <b id="needMin">160분 / 월</b>
+            <span id="needShorts">숏폼 약 32개</span><br />
             <span>추천 플랜</span>
             <b class="grad-text" id="recPlan">Basic</b>
             <a href="#plans" class="btn btn-primary" style="margin-top: 8px;" id="recBtn">이 플랜 선택하기</a>
@@ -81,28 +78,28 @@
         </div>
         <div class="faq">
           <details open>
-            <summary>편집 시간(분)은 어떻게 차감되나요?</summary>
-            <p>업로드한 원본 영상의 길이를 기준으로 차감됩니다. 예를 들어 10분짜리 영상을 AI 자막·컷편집하면 10분이 차감되며, 같은 영상을 다시 편집할 때는 추가 차감되지 않아요.</p>
+            <summary>시간(분)은 어떻게 차감되나요?</summary>
+            <p>AI가 분석한 원본 영상의 길이만큼 차감됩니다. 구간을 지정하면 지정한 구간 길이만 차감돼요. 예를 들어 2시간 강연에서 30분만 지정하면 30분이 차감됩니다.</p>
           </details>
           <details>
-            <summary>남은 편집 시간은 다음 달로 이월되나요?</summary>
-            <p>월간 플랜은 매 결제일에 초기화됩니다. 연간 플랜은 1년치 시간이 한 번에 지급되어 기간 내 자유롭게 사용할 수 있어요.</p>
+            <summary>숏폼은 몇 개나 만들어지나요?</summary>
+            <p>원본 약 5분당 숏폼 1개를 기준으로 안내하고 있어요. 실제 개수는 영상의 밀도에 따라 달라지며, 한 영상에서 최대 10개까지 후보를 보여 드립니다.</p>
           </details>
           <details>
-            <summary>무료 플랜으로 만든 영상에도 워터마크가 들어가나요?</summary>
-            <p>네, Free 플랜은 내보내기 시 우측 하단에 작은 워터마크가 들어갑니다. Basic 이상 플랜에서는 워터마크 없이 내보낼 수 있어요.</p>
+            <summary>정말 카드 등록 없이 무료로 쓸 수 있나요?</summary>
+            <p>네. 회원가입만 하면 90분이 바로 지급되고, 숏폼 약 15개를 만들 수 있어요. 무료 플랜 숏폼에는 작은 워터마크가 들어갑니다.</p>
           </details>
           <details>
-            <summary>플랜 변경이나 해지는 어떻게 하나요?</summary>
-            <p>마이페이지 &gt; 구독 관리에서 언제든 변경·해지할 수 있습니다. 업그레이드는 즉시 적용되며 남은 기간만큼 일할 계산됩니다. 해지 시 현재 결제 기간이 끝날 때까지 이용 가능해요.</p>
+            <summary>남은 시간은 다음 달로 이월되나요?</summary>
+            <p>유료 플랜의 월 제공 시간은 결제일마다 새로 채워지며 이월되지 않습니다. 가입 시 받은 무료 90분은 사용할 때까지 유지돼요.</p>
           </details>
           <details>
-            <summary>환불 정책이 궁금해요.</summary>
-            <p>결제 후 7일 이내, 편집 시간을 사용하지 않았다면 전액 환불됩니다. 일부 사용한 경우 사용량을 제외하고 환불해 드려요.</p>
+            <summary>커스텀 페르소나가 뭔가요?</summary>
+            <p>채널 성격, 타깃 시청자, 선호하는 숏폼 톤(정보형·감성형·유머형)을 저장해 두는 설정이에요. AI가 하이라이트를 고르고 제목을 지을 때 이 기준을 반영합니다.</p>
           </details>
           <details>
-            <summary>세금계산서 발행이 가능한가요?</summary>
-            <p>Pro, Team 플랜은 사업자 정보를 등록하면 매월 전자세금계산서가 자동 발행됩니다.</p>
+            <summary>해지와 환불은 어떻게 하나요?</summary>
+            <p>마이페이지에서 언제든 해지할 수 있고, 현재 결제 기간이 끝날 때까지 이용 가능합니다. 결제 후 7일 이내 사용 이력이 없으면 전액 환불해 드려요.</p>
           </details>
         </div>
       </div>
@@ -112,8 +109,8 @@
       <div class="container">
         <div class="cta-box">
           <h2>지금 무료로 시작해 보세요</h2>
-          <p>카드 등록 없이 매월 30분 무료 편집 제공</p>
-          <a href="editor.html" class="btn btn-lg">무료로 영상 편집하기 →</a>
+          <p>회원가입 즉시 90분 무료 · 신용카드 필요 없음</p>
+          <a href="editor.html" class="btn btn-lg">무료로 숏폼 만들기 →</a>
         </div>
       </div>
     </section>
@@ -135,7 +132,7 @@
     <div class="modal-card">
       <h3 id="coTitle">Pro 플랜 구독</h3>
       <p>결제 정보를 입력해 주세요. (데모 — 실제 결제되지 않습니다)</p>
-      <div class="summary"><span id="coCycle">월간 결제</span><b id="coPrice">₩29,900</b></div>
+      <div class="summary"><span id="coCycle">월간 결제</span><b id="coPrice">₩19,900</b></div>
       <input type="email" placeholder="이메일" id="coEmail" />
       <input type="text" placeholder="이름" />
       <div class="modal-actions">

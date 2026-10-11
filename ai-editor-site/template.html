@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>템플릿 | Clipora AI 숏폼</title>
+  <meta name="description" content="강의·강연·인터뷰에 맞춘 숏폼 템플릿을 골라 바로 적용하세요." />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <a href="index.html" class="logo"><span class="logo-mark">▶</span>Clipora</a>
+      <nav class="nav" id="nav">
+        <a href="index.html#how">사용 방법</a>
+        <a href="template.html" class="active">템플릿</a>
+        <a href="contents.html">내 콘텐츠</a>
+        <a href="pricing.html">요금제</a>
+      </nav>
+      <div class="header-cta">
+        <a href="editor.html" class="btn btn-primary">+ 숏폼 만들기</a>
+        <button class="menu-btn" aria-label="메뉴" data-menu>☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container page">
+    <div class="page-head">
+      <div>
+        <h1>템플릿</h1>
+        <p>영상 성격에 맞는 템플릿을 고르면 제목·자막·배경이 자동으로 적용돼요.</p>
+      </div>
+      <input type="search" id="q" class="search" placeholder="템플릿 검색" />
+    </div>
+    <div class="filters" id="filters"></div>
+    <div class="tpl-grid" id="grid"></div>
+  </main>
+
+  <!-- 크게 보기 -->
+  <div class="modal" id="preview" role="dialog" aria-modal="true">
+    <div class="modal-card tpl-modal">
+      <canvas id="bigCanvas" width="540" height="960"></canvas>
+      <div>
+        <span class="pill" id="pvCat"></span>
+        <h3 id="pvName" style="margin-top: 8px;"></h3>
+        <p id="pvDesc"></p>
+        <label class="field">미리보기 제목<input id="pvTitle" value="강의 10년 차가 말하는 진짜 공부법" /></label>
+        <label class="field">미리보기 자막<input id="pvCaption" value="결국 중요한 건 꾸준함입니다" /></label>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" data-close>닫기</button>
+          <button class="btn btn-primary" id="pvUse">이 템플릿으로 만들기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+  <script src="templates.js"></script>
+  <script src="store.js"></script>
+  <script>
+    const SAMPLE = { title: '강의 10년 차가 말하는 진짜 공부법', caption: '결국 중요한 건 꾸준함입니다' };
+    const cats = ['전체', ...new Set(TEMPLATES.map((t) => t.category))];
+    let cat = '전체';
+    let current = null;
+    const selected = Store.template();
+
+    function drawPreview(canvas, tpl, title, caption) {
+      renderFrame(canvas.getContext('2d'), canvas.width, canvas.height, { tpl, title, caption });
+    }
+
+    function render() {
+      const q = document.getElementById('q').value.trim();
+      document.getElementById('filters').innerHTML = cats.map((c) =>
+        `<button class="chip ${c === cat ? 'on' : ''}" data-cat="${c}">${c}</button>`).join('');
+      const list = TEMPLATES.filter((t) => (cat === '전체' || t.category === cat) && (!q || (t.name + t.desc).includes(q)));
+      const grid = document.getElementById('grid');
+      grid.innerHTML = list.length ? list.map((t) => `
+        <article class="tpl-card" data-id="${t.id}">
+          <div class="tpl-thumb">
+            <canvas width="270" height="480" data-canvas="${t.id}"></canvas>
+            ${t.id === selected ? '<span class="pill current">사용 중</span>' : ''}
+          </div>
+          <div class="tpl-meta">
+            <b>${t.name}</b>
+            <span>${t.desc}</span>
+          </div>
+        </article>`).join('') : '<p class="empty-msg">검색 결과가 없어요.</p>';
+      // 썸네일은 절반 해상도로 그리고 CSS로 맞춥니다.
+      grid.querySelectorAll('[data-canvas]').forEach((c) => {
+        const ctx = c.getContext('2d');
+        ctx.scale(0.5, 0.5);
+        renderFrame(ctx, 540, 960, { tpl: getTemplate(c.dataset.canvas), ...SAMPLE });
+      });
+    }
+
+    function openPreview(id) {
+      current = getTemplate(id);
+      document.getElementById('pvCat').textContent = current.category;
+      document.getElementById('pvName').textContent = current.name;
+      document.getElementById('pvDesc').textContent = current.desc;
+      redraw();
+      document.getElementById('preview').classList.add('open');
+    }
+    const redraw = () => drawPreview(document.getElementById('bigCanvas'), current,
+      document.getElementById('pvTitle').value, document.getElementById('pvCaption').value);
+
+    document.addEventListener('click', (e) => {
+      const chip = e.target.closest('[data-cat]');
+      if (chip) { cat = chip.dataset.cat; render(); }
+      const card = e.target.closest('.tpl-card');
+      if (card) openPreview(card.dataset.id);
+      if (e.target.matches('[data-close]') || e.target.id === 'preview') document.getElementById('preview').classList.remove('open');
+    });
+    ['pvTitle', 'pvCaption'].forEach((id) => document.getElementById(id).addEventListener('input', redraw));
+    document.getElementById('q').addEventListener('input', render);
+    document.getElementById('pvUse').addEventListener('click', () => {
+      Store.template(current.id);
+      location.href = 'editor.html?template=' + current.id;
+    });
+
+    render();
+    // 웹폰트가 늦게 오면 한 번 더 그립니다.
+    document.fonts && document.fonts.ready.then(render);
+  </script>
+</body>
+</html>
