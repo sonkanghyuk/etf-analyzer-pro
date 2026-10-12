@@ -1,8 +1,8 @@
 // 숏폼 에디터
 // - 발화 구간 감지와 하이라이트 선별은 Web Audio로 브라우저에서 실제 계산합니다
 //   (말이 끊김 없이 이어지는 비율 60% + 목소리 에너지 40%로 점수화).
-// - 자막 "텍스트"와 제목은 음성인식(STT)/LLM 서버가 필요하므로 데모 문장으로 채웁니다.
-//   실서비스에서는 transcribe()와 suggestTitle()을 API 호출로 바꾸면 됩니다.
+// - 자막은 브라우저 안에서 Whisper로 실제 음성을 인식합니다(stt.js). 실패하면 빈 자막 칸을 만들어 직접 입력하게 합니다.
+// - 제목은 로그인 상태면 백엔드(Claude)가 자막을 읽고 짓고, 아니면 자막에서 가장 핵심적인 문장을 고릅니다.
 // - 내보내기는 템플릿을 입힌 9:16 캔버스를 MediaRecorder로 녹화해 실제 WebM 파일을 만듭니다.
 
 const $ = (id) => document.getElementById(id);
@@ -10,16 +10,6 @@ const video = $('video');
 const preview = $('preview');
 const pctx = preview.getContext('2d');
 const STEP = 0.1; // 오디오 분석 단위(초)
-
-const DEMO_LINES = [
-  '여러분 이거 하나만 기억하시면 됩니다', '대부분 여기서 실수를 하세요', '생각보다 정말 간단한 방법이에요',
-  '제가 10년 동안 해 보고 깨달은 건', '결국 중요한 건 꾸준함입니다', '이 질문을 정말 많이 받는데요',
-  '핵심은 딱 세 가지예요', '처음엔 저도 몰랐어요', '이렇게 하면 시간이 절반으로 줄어요', '오늘 이것만 가져가셔도 충분합니다',
-];
-const DEMO_TITLES = [
-  '이거 모르면 계속 손해 봅니다', '10년 차가 알려주는 진짜 핵심', '다들 여기서 실수합니다',
-  '딱 3가지만 기억하세요', '질문 1위, 드디어 답합니다', '이 한 마디에 다 담겨 있어요',
-];
 
 let fileName = '';
 let audioBuffer = null;
@@ -65,11 +55,17 @@ if (link) {
   $('linkNotice').textContent = `🔗 ${link} — 링크로 가져오기는 서버 연동이 필요해요. 데모에서는 영상 파일을 직접 올려 주세요.`;
 }
 
-function renderUsage() {
-  const used = Math.ceil(Store.usedSec() / 60);
-  $('usage').textContent = `무료 시간 ${Math.max(0, FREE_MINUTES - used)}분 남음`;
+// 로그인하면 서버 잔여 시간을, 아니면 이 브라우저에 기록된 무료 시간을 씁니다.
+function remainingSec() {
+  return Auth.user ? Auth.user.balanceSec : Math.max(0, FREE_MINUTES * 60 - Store.usedSec());
 }
+function renderUsage() {
+  const label = Auth.user ? `${Auth.user.planName} · 남은 시간` : '무료 시간';
+  $('usage').textContent = `${label} ${Math.floor(remainingSec() / 60)}분`;
+}
+const watermark = () => !(Auth.user && Auth.user.watermark === false);
 renderUsage();
+authReady.then(renderUsage);
 
 // ---------- 파일 ----------
 function loadFile(file) {
@@ -192,52 +188,111 @@ function pickHighlights(start, end) {
   return { clips: picked.sort((a, b) => a.start - b.start), segs };
 }
 
-function transcribe(clip, segs, offset) {
+// 긴 인식 결과를 화면에 읽기 좋은 길이(약 18자)로 나누고, 시간은 글자 수 비율로 배분합니다.
+function splitCaption(c, maxChars = 18) {
+  const words = c.text.split(/\s+/).filter(Boolean);
+  const parts = [];
+  let cur = '';
+  for (const w of words) {
+    if (cur && (cur + ' ' + w).length > maxChars) { parts.push(cur); cur = w; } else cur = cur ? cur + ' ' + w : w;
+  }
+  if (cur) parts.push(cur);
+  const total = parts.reduce((n, p) => n + p.length, 0) || 1;
+  let t = c.start;
+  return parts.map((p) => {
+    const d = ((c.end - c.start) * p.length) / total;
+    const piece = { start: t, end: t + d, text: p };
+    t += d;
+    return piece;
+  });
+}
+
+// 음성인식을 못 쓸 때: 발화 구간마다 빈 자막 칸을 만들어 직접 입력하게 합니다.
+function emptyCaptions(clip, segs) {
   const caps = [];
   segs.forEach((s) => {
     const a = Math.max(s.start, clip.start), b = Math.min(s.end, clip.end);
     for (let t = a; t < b - 0.2; t += 3) caps.push({ start: t, end: Math.min(t + 3, b), text: '' });
   });
-  if (!caps.length) caps.push({ start: clip.start, end: clip.end, text: '' });
-  caps.forEach((c, i) => { c.text = DEMO_LINES[(offset + i) % DEMO_LINES.length]; });
-  return caps;
+  return caps.length ? caps : [{ start: clip.start, end: clip.end, text: '' }];
 }
-const suggestTitle = (i) => DEMO_TITLES[i % DEMO_TITLES.length];
 
-// ---------- AI 숏폼 만들기 ----------
-async function progress(steps) {
+// 서버 없이 고르는 제목: 너무 짧지도 길지도 않은, 가장 꽉 찬 문장
+function localTitle(clip, i) {
+  const text = clip.captions.map((c) => c.text).join(' ').trim();
+  if (!text) return `하이라이트 ${i + 1}`;
+  const sentences = text.split(/(?<=[.?!요다죠까])\s+/).map((x) => x.trim()).filter((x) => x.length >= 6);
+  const best = sentences.sort((x, y) => Math.abs(16 - x.length) - Math.abs(16 - y.length))[0] || text;
+  return best.length > 24 ? best.slice(0, 23) + '…' : best;
+}
+
+function setProgress(text, ratio) {
   $('progress').classList.add('show');
-  for (let i = 0; i < steps.length; i++) {
-    $('progressText').textContent = `🤖 ${steps[i]}…`;
-    $('progressBar').style.width = ((i + 1) / steps.length) * 100 + '%';
-    await new Promise((r) => setTimeout(r, 450));
+  $('progressText').textContent = text;
+  $('progressBar').style.width = clamp(ratio, 0, 1) * 100 + '%';
+}
+
+async function chargeTime(sec) {
+  if (Auth.user) {
+    Auth.user = await api('/api/usage', { method: 'POST', body: { seconds: sec } });
+  } else {
+    if (sec > remainingSec()) throw new Error('무료 시간이 부족해요. 구간을 줄이거나 로그인 후 플랜을 업그레이드해 주세요');
+    Store.addUsed(sec);
   }
-  $('progress').classList.remove('show');
+  renderUsage();
 }
 
 $('make').addEventListener('click', async () => {
   if (!video.duration) { toast('먼저 촬영본을 올려 주세요'); return; }
   const { start, end } = getRange();
   if (end - start < 3) { toast('구간을 3초 이상으로 지정해 주세요'); return; }
-  if (Store.usedSec() + (end - start) > FREE_MINUTES * 60) {
-    toast('무료 시간이 부족해요. 구간을 줄이거나 플랜을 업그레이드해 주세요'); return;
-  }
   if (!audioBuffer && !rms) await new Promise((r) => setTimeout(r, 300)); // 디코딩 대기 여유
   $('make').disabled = true;
-  await progress(['음성 분석', '하이라이트 탐색', '자막 생성', '템플릿 적용']);
-  const { clips: found, segs } = pickHighlights(start, end);
-  let offset = 0;
-  clips = found.map((c, i) => {
-    const captions = transcribe(c, segs, offset);
-    offset += captions.length;
-    return { ...c, score: Math.min(99, Math.round(55 + 44 * c.raw)), title: suggestTitle(i), captions };
-  });
-  Store.addUsed(end - start);
-  renderUsage();
-  $('make').disabled = false;
-  renderClips();
-  selectClip(0);
-  toast(`하이라이트 ${clips.length}개를 찾았어요 (자막·제목은 데모 문장)`);
+  try {
+    await authReady;
+    await chargeTime(end - start);
+
+    setProgress('🤖 음성 분석 · 하이라이트 탐색…', 0.1);
+    await new Promise((r) => setTimeout(r, 50));
+    const { clips: found, segs } = pickHighlights(start, end);
+    clips = found.map((c) => ({ ...c, score: Math.min(99, Math.round(55 + 44 * c.raw)), title: '', captions: [] }));
+
+    // 자막: 클립 구간만 음성인식
+    let sttFailed = !$('useStt').checked || !audioBuffer;
+    for (let i = 0; i < clips.length && !sttFailed; i++) {
+      try {
+        const raw = await STT.transcribe(audioBuffer, clips[i].start, clips[i].end, (p) =>
+          setProgress(`⬇️ 음성인식 모델 내려받는 중… ${Math.round(p * 100)}% (처음 한 번만)`, p));
+        setProgress(`💬 자막 생성 중… ${i + 1}/${clips.length}`, (i + 1) / clips.length);
+        clips[i].captions = raw.flatMap((c) => splitCaption(c));
+      } catch (err) {
+        console.warn('STT 실패', err);
+        sttFailed = true;
+      }
+    }
+    clips.forEach((c) => { if (!c.captions.length) c.captions = emptyCaptions(c, segs); });
+
+    // 제목: 로그인 상태면 Claude, 아니면 자막에서 고르기
+    let aiTitles = null;
+    if (Auth.user && !sttFailed) {
+      setProgress('✍️ AI가 제목을 짓는 중…', 0.95);
+      try {
+        aiTitles = (await api('/api/titles', { method: 'POST', body: { transcripts: clips.map((c) => c.captions.map((x) => x.text).join(' ')) } })).titles;
+      } catch (err) { toast(err.message); }
+    }
+    clips.forEach((c, i) => { c.title = (aiTitles && aiTitles[i]) || localTitle(c, i); });
+
+    renderClips();
+    selectClip(0);
+    toast(sttFailed
+      ? `하이라이트 ${clips.length}개를 찾았어요. 음성인식을 쓸 수 없어 자막 칸을 비워 뒀어요 — 직접 입력해 주세요`
+      : `하이라이트 ${clips.length}개를 찾고 자막을 만들었어요`);
+  } catch (err) {
+    toast(err.message || '처리하지 못했어요');
+  } finally {
+    $('progress').classList.remove('show');
+    $('make').disabled = false;
+  }
 });
 
 // ---------- 클립 목록 / 선택 ----------
@@ -261,7 +316,7 @@ function selectClip(i) {
   $('clipTitle').disabled = !c;
   $('clipTitle').value = c ? c.title : '';
   $('caps').innerHTML = c ? c.captions.map((cap, k) => `
-    <div class="cap" data-k="${k}"><time data-seek="${cap.start}">${fmt(cap.start)}</time><input value="${cap.text.replace(/"/g, '&quot;')}" data-cap="${k}" /></div>`).join('')
+    <div class="cap" data-k="${k}"><time data-seek="${cap.start}">${fmt(cap.start)}</time><input value="${cap.text.replace(/"/g, '&quot;')}" data-cap="${k}" placeholder="자막 입력" /></div>`).join('')
     : '<span style="font-size: 13px;">하이라이트를 선택하면 자막을 수정할 수 있어요.</span>';
   if (c) video.currentTime = c.start;
   document.querySelectorAll('.clip-card').forEach((el) => el.classList.toggle('sel', +el.dataset.clip === i));
@@ -336,7 +391,7 @@ function frame() {
   }
   const opts = {
     source: video.readyState >= 2 ? video : null,
-    tpl, title: c ? c.title : '하이라이트를 선택하세요', caption: currentCaption(t), watermark: true,
+    tpl, title: c ? c.title : '하이라이트를 선택하세요', caption: currentCaption(t), watermark: watermark(),
   };
   renderFrame(pctx, 540, 960, opts);
   if (exporting) {
@@ -379,7 +434,7 @@ $('export').addEventListener('click', async () => {
   video.pause();
   video.currentTime = c.start;
   await new Promise((r) => video.addEventListener('seeked', r, { once: true }));
-  renderFrame(ectx, 720, 1280, { source: video, tpl, title: c.title, caption: currentCaption(c.start), watermark: true });
+  renderFrame(ectx, 720, 1280, { source: video, tpl, title: c.title, caption: currentCaption(c.start), watermark: watermark() });
   const thumbCanvas = document.createElement('canvas');
   thumbCanvas.width = 270; thumbCanvas.height = 480;
   thumbCanvas.getContext('2d').drawImage(exportCanvas, 0, 0, 270, 480);

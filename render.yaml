@@ -1,0 +1,19 @@
+# Render 블루프린트: Clipora 백엔드 (clipora-api/)
+services:
+  - type: web
+    name: clipora-api
+    runtime: docker
+    rootDir: clipora-api
+    plan: starter
+    healthCheckPath: /api/health
+    disk:
+      name: clipora-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: ALLOWED_ORIGINS
+        value: https://sonkanghyuk.github.io
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: TOSS_SECRET_KEY
+        sync: false

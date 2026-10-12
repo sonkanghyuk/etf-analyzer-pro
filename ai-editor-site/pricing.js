@@ -94,10 +94,48 @@ function updateCalc() {
   document.getElementById('recBtn').dataset.plan = rec.id;
 }
 
+// 토스페이먼츠 SDK는 결제 버튼을 누를 때 한 번만 불러옵니다.
+let tossLoading;
+function loadToss() {
+  return tossLoading || (tossLoading = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://js.tosspayments.com/v2/standard';
+    s.onload = () => resolve(window.TossPayments);
+    s.onerror = () => { tossLoading = null; reject(new Error('결제창을 불러오지 못했어요')); };
+    document.head.appendChild(s);
+  }));
+}
+
+async function realCheckout(p) {
+  await authReady;
+  if (!Auth.user) {
+    location.href = 'login.html?mode=signup&next=pricing.html';
+    return;
+  }
+  try {
+    const order = await api('/api/payments/orders', { method: 'POST', body: { plan: p.id } });
+    const TossPayments = await loadToss();
+    const base = location.href.replace(/[^/]*$/, '');
+    await TossPayments(CFG.tossClientKey).payment({ customerKey: order.customerKey }).requestPayment({
+      method: 'CARD',
+      amount: { currency: 'KRW', value: order.amount },
+      orderId: order.orderId,
+      orderName: order.orderName,
+      customerEmail: order.customerEmail,
+      successUrl: base + 'payment-success.html',
+      failUrl: base + 'payment-fail.html',
+    });
+  } catch (err) {
+    // 사용자가 결제창을 닫은 경우(USER_CANCEL)는 조용히 넘어갑니다.
+    if (err && err.code !== 'USER_CANCEL') toast(err.message || '결제를 시작하지 못했어요');
+  }
+}
+
 function openCheckout(id) {
   const p = PLANS.find((x) => x.id === id);
   if (!p) return;
-  if (p.oneTime) { location.href = 'editor.html'; return; }
+  if (p.oneTime) { location.href = Auth.enabled() ? 'login.html?mode=signup&next=editor.html' : 'editor.html'; return; }
+  if (Auth.enabled() && CFG.tossClientKey) { realCheckout(p); return; }
   document.getElementById('coTitle').textContent = `${p.name} 플랜 구독`;
   document.getElementById('coCycle').textContent = `월간 결제 · 매달 ${p.minutes}분`;
   document.getElementById('coPrice').textContent = `${won(p.price)} / 월`;

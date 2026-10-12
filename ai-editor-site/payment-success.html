@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>결제 확인 | Clipora AI 숏폼</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="header"><div class="container"><a href="index.html" class="logo"><span class="logo-mark">▶</span>Clipora</a></div></header>
+  <main class="container auth-wrap">
+    <div class="auth-card" style="text-align: center;">
+      <div style="font-size: 44px;" id="icon">⏳</div>
+      <h1 id="title">결제를 확인하고 있어요</h1>
+      <p id="msg">창을 닫지 말고 잠시만 기다려 주세요.</p>
+      <a href="editor.html" class="btn btn-primary btn-block" id="go" hidden>숏폼 만들러 가기</a>
+      <a href="pricing.html" class="btn btn-ghost btn-block" id="back" hidden style="margin-top: 8px;">요금제로 돌아가기</a>
+    </div>
+  </main>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+  <script>
+    (async () => {
+      const q = new URLSearchParams(location.search);
+      const show = (icon, title, msg, ok) => {
+        document.getElementById('icon').textContent = icon;
+        document.getElementById('title').textContent = title;
+        document.getElementById('msg').textContent = msg;
+        document.getElementById(ok ? 'go' : 'back').hidden = false;
+      };
+      try {
+        const res = await api('/api/payments/confirm', {
+          method: 'POST',
+          body: { paymentKey: q.get('paymentKey'), orderId: q.get('orderId'), amount: Number(q.get('amount')) },
+        });
+        const u = res.user;
+        const exp = new Date(u.planExpiresAt * 1000).toLocaleDateString('ko-KR');
+        show('🎉', `${u.planName} 플랜이 시작됐어요`, `남은 시간 ${Math.floor(u.balanceSec / 60)}분 · ${exp}까지 이용 · 워터마크 없이 내보낼 수 있어요`, true);
+      } catch (err) {
+        show('⚠️', '결제를 완료하지 못했어요', err.message + ' (결제가 승인되지 않았다면 청구되지 않아요)', false);
+      }
+    })();
+  </script>
+</body>
+</html>

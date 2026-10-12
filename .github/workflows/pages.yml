@@ -1,0 +1,52 @@
+# ai-editor-site/ 폴더를 GitHub Pages에 배포합니다.
+# 한 번만 설정: Settings → Pages → Build and deployment → Source를 "GitHub Actions"로.
+# 백엔드를 붙이려면 Settings → Secrets and variables → Actions → Variables에
+#   CLIPORA_API_BASE (예: https://clipora-api.onrender.com), TOSS_CLIENT_KEY (test_ck_...)
+# 를 추가하고 이 워크플로를 다시 실행하세요. 비워 두면 데모 모드로 배포됩니다.
+name: Deploy site to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths: ["ai-editor-site/**", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Write config.js from repository variables
+        env:
+          API_BASE: ${{ vars.CLIPORA_API_BASE }}
+          TOSS_CLIENT_KEY: ${{ vars.TOSS_CLIENT_KEY }}
+        run: |
+          node -e '
+            const cfg = {
+              apiBase: process.env.API_BASE || "",
+              tossClientKey: process.env.TOSS_CLIENT_KEY || "",
+              whisperModel: "onnx-community/whisper-base",
+            };
+            require("fs").writeFileSync("ai-editor-site/config.js", "window.CLIPORA = " + JSON.stringify(cfg, null, 2) + ";\n");
+          '
+          cat ai-editor-site/config.js
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ai-editor-site
+      - id: deployment
+        uses: actions/deploy-pages@v4

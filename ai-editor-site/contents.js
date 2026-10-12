@@ -8,6 +8,13 @@ const date = (t) => new Date(t).toLocaleDateString('ko-KR', { month: 'long', day
 const fileName = (it) => `${it.title.replace(/[\\/:*?"<>|]/g, '').slice(0, 40) || 'short'}.webm`;
 
 function renderUsage() {
+  const card = document.querySelector('.usage-card > div');
+  if (Auth.user) {
+    const left = Math.floor(Auth.user.balanceSec / 60);
+    card.innerHTML = `${Auth.user.planName} · 남은 시간 <b id="remain">${left}분</b>`;
+    document.getElementById('usageBar').style.width = '100%';
+    return;
+  }
   const usedMin = Math.ceil(Store.usedSec() / 60);
   const remain = Math.max(0, FREE_MINUTES - usedMin);
   document.getElementById('remain').textContent = `${remain}분`;
@@ -106,6 +113,7 @@ document.addEventListener('click', async (e) => {
 
 (async () => {
   renderUsage();
+  authReady.then(renderUsage);
   items = await Store.all();
   render();
 })();

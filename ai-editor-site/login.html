@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>로그인 | Clipora AI 숏폼</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <a href="index.html" class="logo"><span class="logo-mark">▶</span>Clipora</a>
+    </div>
+  </header>
+
+  <main class="container auth-wrap">
+    <form class="auth-card" id="form">
+      <div class="source-tabs">
+        <button type="button" class="on" data-mode="login">로그인</button>
+        <button type="button" data-mode="signup">회원가입</button>
+      </div>
+      <h1 id="heading">다시 오신 걸 환영해요</h1>
+      <p id="sub">로그인하고 숏폼을 이어서 만들어 보세요.</p>
+      <div class="notice" id="demoNotice" hidden>백엔드가 연결되지 않은 데모 사이트예요. <code>config.js</code>의 <code>apiBase</code>를 설정하면 로그인할 수 있어요.</div>
+      <label class="field">이메일<input type="email" id="email" autocomplete="email" required /></label>
+      <label class="field">비밀번호<input type="password" id="password" autocomplete="current-password" minlength="8" required placeholder="8자 이상" /></label>
+      <button class="btn btn-primary btn-block" id="submit" type="submit">로그인</button>
+      <p class="fine" id="fine">가입하면 90분 무료 시간이 바로 지급돼요 · 카드 등록 불필요</p>
+    </form>
+  </main>
+  <div class="toast" id="toast"></div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+  <script>
+    let mode = new URLSearchParams(location.search).get('mode') === 'signup' ? 'signup' : 'login';
+    const next = new URLSearchParams(location.search).get('next') || 'contents.html';
+    const safeNext = /^[\w.-]+\.html(\?[^#]*)?$/.test(next) ? next : 'contents.html';
+    const $ = (id) => document.getElementById(id);
+
+    function setMode(m) {
+      mode = m;
+      document.querySelectorAll('[data-mode]').forEach((b) => b.classList.toggle('on', b.dataset.mode === m));
+      $('heading').textContent = m === 'login' ? '다시 오신 걸 환영해요' : '90분 무료로 시작하세요';
+      $('sub').textContent = m === 'login' ? '로그인하고 숏폼을 이어서 만들어 보세요.' : '이메일만으로 가입하고 바로 숏폼을 만들 수 있어요.';
+      $('submit').textContent = m === 'login' ? '로그인' : '가입하고 시작하기';
+      $('password').autocomplete = m === 'login' ? 'current-password' : 'new-password';
+    }
+    document.querySelectorAll('[data-mode]').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
+    setMode(mode);
+    if (!Auth.enabled()) $('demoNotice').hidden = false;
+
+    $('form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!Auth.enabled()) { toast('데모 모드에서는 로그인할 수 없어요'); return; }
+      $('submit').disabled = true;
+      try {
+        const res = await api(`/api/auth/${mode}`, { method: 'POST', body: { email: $('email').value, password: $('password').value } });
+        Auth.token = res.token;
+        location.href = safeNext;
+      } catch (err) {
+        toast(err.message);
+        $('submit').disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
