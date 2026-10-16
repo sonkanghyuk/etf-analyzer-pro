@@ -1,0 +1,2 @@
+# Optional local STT. Downloads model only after user confirms in the app.
+faster-whisper==1.2.1

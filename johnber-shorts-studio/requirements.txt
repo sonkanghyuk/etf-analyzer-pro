@@ -1,0 +1,5 @@
+# Direct dependencies pinned; full resolved lock is requirements.lock.
+fastapi==0.141.1
+uvicorn==0.52.1
+Pillow==12.3.0
+python-multipart==0.0.32
