@@ -1,0 +1,10 @@
+# 존버나드 쇼츠 스튜디오 — 검증한 버전(Python 3.10 이상, 2026-10-16 Linux에서 테스트)
+fastapi==0.143.2
+starlette==1.6.0
+uvicorn==0.53.0
+python-multipart==0.0.32
+pillow==12.3.0
+fonttools==4.67.0
+pydantic==2.13.5
+anthropic==1.15.0
+faster-whisper==1.2.1

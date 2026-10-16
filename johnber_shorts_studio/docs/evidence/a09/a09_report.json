@@ -1,0 +1,200 @@
+{
+ "start": {
+  "t_ms": 1850.0,
+  "lines_scene": [
+   "SOXL · TQQQ · SCHD / 3.07% / 0.1%p /",
+   "1,000,000원 / 길이가 긴 한글 테스트 문장"
+  ],
+  "lines_output_meta": [
+   "SOXL · TQQQ · SCHD / 3.07% / 0.1%p /",
+   "1,000,000원 / 길이가 긴 한글 테스트 문장"
+  ],
+  "title": {
+   "preview_bbox": [
+    127,
+    229,
+    958,
+    391
+   ],
+   "output_bbox": [
+    125,
+    228,
+    960,
+    391
+   ],
+   "max_coord_diff_pct": 0.1851851851851852,
+   "preview_px": 17547,
+   "output_px": 19346
+  },
+  "subtitle": {
+   "preview_bbox": [
+    90,
+    1327,
+    1010,
+    1440
+   ],
+   "output_bbox": [
+    86,
+    1327,
+    1011,
+    1440
+   ],
+   "max_coord_diff_pct": 0.3703703703703704,
+   "preview_px": 14042,
+   "output_px": 16491
+  }
+ },
+ "middle": {
+  "t_ms": 10850.0,
+  "lines_scene": [
+   "수동 줄바꿈 테스트",
+   "두 번째 줄입니다."
+  ],
+  "lines_output_meta": [
+   "수동 줄바꿈 테스트",
+   "두 번째 줄입니다."
+  ],
+  "title": {
+   "preview_bbox": [
+    127,
+    229,
+    958,
+    391
+   ],
+   "output_bbox": [
+    125,
+    228,
+    960,
+    391
+   ],
+   "max_coord_diff_pct": 0.1851851851851852,
+   "preview_px": 17547,
+   "output_px": 19373
+  },
+  "subtitle": {
+   "preview_bbox": [
+    316,
+    1329,
+    763,
+    1454
+   ],
+   "output_bbox": [
+    314,
+    1328,
+    763,
+    1452
+   ],
+   "max_coord_diff_pct": 0.1851851851851852,
+   "preview_px": 11509,
+   "output_px": 12530
+  }
+ },
+ "end": {
+  "t_ms": 16750.0,
+  "lines_scene": [
+   "여기까지가 첫 번째 구간의 마지막",
+   "문장입니다."
+  ],
+  "lines_output_meta": [
+   "여기까지가 첫 번째 구간의 마지막",
+   "문장입니다."
+  ],
+  "title": {
+   "preview_bbox": [
+    127,
+    229,
+    958,
+    391
+   ],
+   "output_bbox": [
+    125,
+    228,
+    960,
+    391
+   ],
+   "max_coord_diff_pct": 0.1851851851851852,
+   "preview_px": 17547,
+   "output_px": 19332
+  },
+  "subtitle": {
+   "preview_bbox": [
+    145,
+    1328,
+    936,
+    1455
+   ],
+   "output_bbox": [
+    142,
+    1327,
+    937,
+    1453
+   ],
+   "max_coord_diff_pct": 0.2777777777777778,
+   "preview_px": 13232,
+   "output_px": 14319
+  }
+ },
+ "emphasis": {
+  "t_ms": 1850.0,
+  "lines_scene": [
+   "SOXL · TQQQ · SCHD / 3.07% / 0.1%p /",
+   "1,000,000원 / 길이가 긴 한글 테스트 문장"
+  ],
+  "lines_output_meta": [
+   "SOXL · TQQQ · SCHD / 3.07% / 0.1%p /",
+   "1,000,000원 / 길이가 긴 한글 테스트 문장"
+  ],
+  "title": {
+   "preview_bbox": [
+    127,
+    229,
+    958,
+    391
+   ],
+   "output_bbox": [
+    125,
+    228,
+    960,
+    391
+   ],
+   "max_coord_diff_pct": 0.1851851851851852,
+   "preview_px": 17547,
+   "output_px": 19346
+  },
+  "subtitle": {
+   "preview_bbox": [
+    90,
+    1327,
+    1010,
+    1440
+   ],
+   "output_bbox": [
+    86,
+    1327,
+    1011,
+    1440
+   ],
+   "max_coord_diff_pct": 0.3703703703703704,
+   "preview_px": 14042,
+   "output_px": 16491
+  },
+  "emphasis": {
+   "preview_bbox": [
+    72,
+    1330,
+    768,
+    1370
+   ],
+   "output_bbox": [
+    68,
+    1330,
+    767,
+    1369
+   ],
+   "max_coord_diff_pct": 0.3703703703703704,
+   "preview_px": 2569,
+   "output_px": 2745
+  }
+ },
+ "PASS": true
+}

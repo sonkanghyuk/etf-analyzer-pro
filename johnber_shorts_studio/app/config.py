@@ -78,12 +78,19 @@ def anthropic_key_present() -> bool:
     return bool(env("ANTHROPIC_API_KEY"))
 
 
+def _tool(env_name: str, exe: str) -> str | None:
+    custom = env(env_name)
+    if custom:
+        return custom if Path(custom).is_file() else None
+    return shutil.which(exe)
+
+
 def ffmpeg_path() -> str | None:
-    return env("JSS_FFMPEG") or shutil.which("ffmpeg")
+    return _tool("JSS_FFMPEG", "ffmpeg")
 
 
 def ffprobe_path() -> str | None:
-    return env("JSS_FFPROBE") or shutil.which("ffprobe")
+    return _tool("JSS_FFPROBE", "ffprobe")
 
 
 def ensure_dirs() -> None:

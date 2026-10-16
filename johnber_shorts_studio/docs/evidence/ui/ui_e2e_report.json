@@ -1,0 +1,17 @@
+{
+ "restored_subtitle_size": "66",
+ "restored_subtitle_y": "1204",
+ "browser_can_play_h264": "",
+ "play_notice": "재생할 수 없습니다: The element has no supported sources.\n재생용 프록시 만들기",
+ "time_label_while_playing": "출력 00:02.4 / 00:18.0 · 원본 00:05.4 · 1배",
+ "cue_visible_while_playing": true,
+ "time_label_after_play": "출력 00:02.4 / 00:18.0 · 원본 00:05.4 · 1배",
+ "1366_buttons_visible": {
+  "MP4 내보내기": true,
+  "확정 미리보기": true,
+  "변경 저장": true
+ },
+ "mid_pane_scrollable": true,
+ "clip_url": "http://127.0.0.1:8790/#/project/prj_8ba6b6c2d10e?clip=clip_fca64e389a26",
+ "errors": []
+}

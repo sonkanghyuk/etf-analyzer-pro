@@ -26,6 +26,11 @@ _ = handlers  # 작업 처리기 등록
 async def lifespan(_: FastAPI):
     db.init()
     services.ensure_builtin_templates()
+    for part in config.TMP_DIR.glob("*.part*"):  # 중단된 렌더링의 미완성 파일 정리(완성본은 outputs에 있음)
+        try:
+            part.unlink()
+        except OSError:
+            pass
     n = jobs.recover_on_startup()
     if n:
         print(f"[복구] 실행 중이던 작업 {n}개를 '중단됨'으로 정리했습니다.")
@@ -563,7 +568,7 @@ def get_template(tid: str, v: int | None = None) -> dict:
 def put_template(tid: str, body: dict) -> dict:
     tpl = services.get_template(tid)
     if tpl["builtin"] and _body(body, "data") is not None:
-        raise StudioError("NOT_FOUND", "기본 템플릿은 수정할 수 없습니다. 복제한 뒤 수정하세요")
+        raise StudioError("BUILTIN_TEMPLATE")
     return services.update_template(tid, name=_body(body, "name"), data=_body(body, "data"))
 
 

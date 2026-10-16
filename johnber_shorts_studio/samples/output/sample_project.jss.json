@@ -1,0 +1,1270 @@
+{
+ "format": "johnber-shorts-project",
+ "schema": 2,
+ "exported_at": 1792148696.2257915,
+ "project": {
+  "id": "prj_9fa97d0109fb",
+  "title": "샘플 강의",
+  "created_at": 1792148657.6230338
+ },
+ "source": {
+  "filename": "lecture_sample.mp4",
+  "sha256": "9333a92b2c1652eb63d055de62c6eb21075b50a32b21e77f1421db8710372ed7",
+  "duration_ms": 90000,
+  "width": 1920,
+  "height": 1080,
+  "fps": 30.0,
+  "has_audio": 1
+ },
+ "transcript_original": [
+  {
+   "end_ms": 3200,
+   "flags": [],
+   "id": "c_8637f14224",
+   "start_ms": 500,
+   "text": "안녕하세요, 오늘은 테스트 영상으로 쇼츠 제작 경로를 확인합니다."
+  },
+  {
+   "end_ms": 6200,
+   "flags": [],
+   "id": "c_cefd4f101f",
+   "start_ms": 3500,
+   "text": "SOXL · TQQQ · SCHD / 3.07% / 0.1%p / 1,000,000원 / 길이가 긴 한글 테스트 문장"
+  },
+  {
+   "end_ms": 9200,
+   "flags": [],
+   "id": "c_9fd7a4c6bb",
+   "start_ms": 6500,
+   "text": "이 문장은 줄바꿈과 글꼴 렌더링을 확인하기 위한 문자열입니다."
+  },
+  {
+   "end_ms": 12200,
+   "flags": [],
+   "id": "c_a94f71d1fc",
+   "start_ms": 9500,
+   "text": "화면 네 모서리의 색 표식이 모두 보여야 합니다."
+  },
+  {
+   "end_ms": 15200,
+   "flags": [],
+   "id": "c_903f281ce8",
+   "start_ms": 12500,
+   "text": "수동 줄바꿈 테스트\n두 번째 줄입니다."
+  },
+  {
+   "end_ms": 18200,
+   "flags": [],
+   "id": "c_50304f2f21",
+   "start_ms": 15500,
+   "text": "English ticker mix: SOXX SMH 엔비디아 커버드콜 분배금"
+  },
+  {
+   "end_ms": 21200,
+   "flags": [],
+   "id": "c_a4c2caf1c8",
+   "start_ms": 18500,
+   "text": "여기까지가 첫 번째 구간의 마지막 문장입니다."
+  },
+  {
+   "end_ms": 24200,
+   "flags": [],
+   "id": "c_c6378e2191",
+   "start_ms": 21500,
+   "text": "두 번째 구간은 여기서 시작합니다."
+  },
+  {
+   "end_ms": 27200,
+   "flags": [],
+   "id": "c_3829947d15",
+   "start_ms": 24500,
+   "text": "숫자와 소수점 표기: 0.75배, 1.25배, 2.0배"
+  },
+  {
+   "end_ms": 30200,
+   "flags": [],
+   "id": "c_c0fa371c2e",
+   "start_ms": 27500,
+   "text": "마지막 문장입니다. 감사합니다."
+  },
+  {
+   "end_ms": 33200,
+   "flags": [],
+   "id": "c_9fea3e4505",
+   "start_ms": 30500,
+   "text": "안녕하세요, 오늘은 테스트 영상으로 쇼츠 제작 경로를 확인합니다."
+  },
+  {
+   "end_ms": 36200,
+   "flags": [],
+   "id": "c_eebca84e56",
+   "start_ms": 33500,
+   "text": "SOXL · TQQQ · SCHD / 3.07% / 0.1%p / 1,000,000원 / 길이가 긴 한글 테스트 문장"
+  },
+  {
+   "end_ms": 39200,
+   "flags": [],
+   "id": "c_59d446b85a",
+   "start_ms": 36500,
+   "text": "이 문장은 줄바꿈과 글꼴 렌더링을 확인하기 위한 문자열입니다."
+  },
+  {
+   "end_ms": 42200,
+   "flags": [],
+   "id": "c_51a6bfad91",
+   "start_ms": 39500,
+   "text": "화면 네 모서리의 색 표식이 모두 보여야 합니다."
+  },
+  {
+   "end_ms": 45200,
+   "flags": [],
+   "id": "c_e1369c38f4",
+   "start_ms": 42500,
+   "text": "수동 줄바꿈 테스트\n두 번째 줄입니다."
+  },
+  {
+   "end_ms": 48200,
+   "flags": [],
+   "id": "c_029396c444",
+   "start_ms": 45500,
+   "text": "English ticker mix: SOXX SMH 엔비디아 커버드콜 분배금"
+  },
+  {
+   "end_ms": 51200,
+   "flags": [],
+   "id": "c_72870d8bf1",
+   "start_ms": 48500,
+   "text": "여기까지가 첫 번째 구간의 마지막 문장입니다."
+  },
+  {
+   "end_ms": 54200,
+   "flags": [],
+   "id": "c_9f0bc94ffc",
+   "start_ms": 51500,
+   "text": "두 번째 구간은 여기서 시작합니다."
+  },
+  {
+   "end_ms": 57200,
+   "flags": [],
+   "id": "c_d189063226",
+   "start_ms": 54500,
+   "text": "숫자와 소수점 표기: 0.75배, 1.25배, 2.0배"
+  },
+  {
+   "end_ms": 60200,
+   "flags": [],
+   "id": "c_02a3e9048f",
+   "start_ms": 57500,
+   "text": "마지막 문장입니다. 감사합니다."
+  },
+  {
+   "end_ms": 63200,
+   "flags": [],
+   "id": "c_e33203e620",
+   "start_ms": 60500,
+   "text": "안녕하세요, 오늘은 테스트 영상으로 쇼츠 제작 경로를 확인합니다."
+  },
+  {
+   "end_ms": 66200,
+   "flags": [],
+   "id": "c_c624e867b4",
+   "start_ms": 63500,
+   "text": "SOXL · TQQQ · SCHD / 3.07% / 0.1%p / 1,000,000원 / 길이가 긴 한글 테스트 문장"
+  },
+  {
+   "end_ms": 69200,
+   "flags": [],
+   "id": "c_8ef995dd3a",
+   "start_ms": 66500,
+   "text": "이 문장은 줄바꿈과 글꼴 렌더링을 확인하기 위한 문자열입니다."
+  },
+  {
+   "end_ms": 72200,
+   "flags": [],
+   "id": "c_1e6aaf7c97",
+   "start_ms": 69500,
+   "text": "화면 네 모서리의 색 표식이 모두 보여야 합니다."
+  },
+  {
+   "end_ms": 75200,
+   "flags": [],
+   "id": "c_86ea043909",
+   "start_ms": 72500,
+   "text": "수동 줄바꿈 테스트\n두 번째 줄입니다."
+  },
+  {
+   "end_ms": 78200,
+   "flags": [],
+   "id": "c_e56729912f",
+   "start_ms": 75500,
+   "text": "English ticker mix: SOXX SMH 엔비디아 커버드콜 분배금"
+  },
+  {
+   "end_ms": 81200,
+   "flags": [],
+   "id": "c_68ce8a8217",
+   "start_ms": 78500,
+   "text": "여기까지가 첫 번째 구간의 마지막 문장입니다."
+  },
+  {
+   "end_ms": 84200,
+   "flags": [],
+   "id": "c_0db65f33fe",
+   "start_ms": 81500,
+   "text": "두 번째 구간은 여기서 시작합니다."
+  },
+  {
+   "end_ms": 87200,
+   "flags": [],
+   "id": "c_6615594574",
+   "start_ms": 84500,
+   "text": "숫자와 소수점 표기: 0.75배, 1.25배, 2.0배"
+  }
+ ],
+ "transcript_working": [
+  {
+   "end_ms": 3200,
+   "flags": [],
+   "id": "c_8637f14224",
+   "start_ms": 500,
+   "text": "안녕하세요, 오늘은 테스트 영상으로 쇼츠 제작 경로를 확인합니다."
+  },
+  {
+   "end_ms": 6200,
+   "flags": [],
+   "id": "c_cefd4f101f",
+   "start_ms": 3500,
+   "text": "SOXL · TQQQ · SCHD / 3.07% / 0.1%p / 1,000,000원 / 길이가 긴 한글 테스트 문장"
+  },
+  {
+   "end_ms": 9200,
+   "flags": [],
+   "id": "c_9fd7a4c6bb",
+   "start_ms": 6500,
+   "text": "이 문장은 줄바꿈과 글꼴 렌더링을 확인하기 위한 문자열입니다."
+  },
+  {
+   "end_ms": 12200,
+   "flags": [],
+   "id": "c_a94f71d1fc",
+   "start_ms": 9500,
+   "text": "화면 네 모서리의 색 표식이 모두 보여야 합니다."
+  },
+  {
+   "end_ms": 15200,
+   "flags": [],
+   "id": "c_903f281ce8",
+   "start_ms": 12500,
+   "text": "수동 줄바꿈 테스트\n두 번째 줄입니다."
+  },
+  {
+   "end_ms": 18200,
+   "flags": [],
+   "id": "c_50304f2f21",
+   "start_ms": 15500,
+   "text": "English ticker mix: SOXX SMH 엔비디아 커버드콜 분배금"
+  },
+  {
+   "end_ms": 21200,
+   "flags": [],
+   "id": "c_a4c2caf1c8",
+   "start_ms": 18500,
+   "text": "여기까지가 첫 번째 구간의 마지막 문장입니다."
+  },
+  {
+   "end_ms": 24200,
+   "flags": [],
+   "id": "c_c6378e2191",
+   "start_ms": 21500,
+   "text": "두 번째 구간은 여기서 시작합니다."
+  },
+  {
+   "end_ms": 27200,
+   "flags": [],
+   "id": "c_3829947d15",
+   "start_ms": 24500,
+   "text": "숫자와 소수점 표기: 0.75배, 1.25배, 2.0배"
+  },
+  {
+   "end_ms": 30200,
+   "flags": [],
+   "id": "c_c0fa371c2e",
+   "start_ms": 27500,
+   "text": "마지막 문장입니다. 감사합니다."
+  },
+  {
+   "end_ms": 33200,
+   "flags": [],
+   "id": "c_9fea3e4505",
+   "start_ms": 30500,
+   "text": "안녕하세요, 오늘은 테스트 영상으로 쇼츠 제작 경로를 확인합니다."
+  },
+  {
+   "end_ms": 36200,
+   "flags": [],
+   "id": "c_eebca84e56",
+   "start_ms": 33500,
+   "text": "SOXL · TQQQ · SCHD / 3.07% / 0.1%p / 1,000,000원 / 길이가 긴 한글 테스트 문장"
+  },
+  {
+   "end_ms": 39200,
+   "flags": [],
+   "id": "c_59d446b85a",
+   "start_ms": 36500,
+   "text": "이 문장은 줄바꿈과 글꼴 렌더링을 확인하기 위한 문자열입니다."
+  },
+  {
+   "end_ms": 42200,
+   "flags": [],
+   "id": "c_51a6bfad91",
+   "start_ms": 39500,
+   "text": "화면 네 모서리의 색 표식이 모두 보여야 합니다."
+  },
+  {
+   "end_ms": 45200,
+   "flags": [],
+   "id": "c_e1369c38f4",
+   "start_ms": 42500,
+   "text": "수동 줄바꿈 테스트\n두 번째 줄입니다."
+  },
+  {
+   "end_ms": 48200,
+   "flags": [],
+   "id": "c_029396c444",
+   "start_ms": 45500,
+   "text": "English ticker mix: SOXX SMH 엔비디아 커버드콜 분배금"
+  },
+  {
+   "end_ms": 51200,
+   "flags": [],
+   "id": "c_72870d8bf1",
+   "start_ms": 48500,
+   "text": "여기까지가 첫 번째 구간의 마지막 문장입니다."
+  },
+  {
+   "end_ms": 54200,
+   "flags": [],
+   "id": "c_9f0bc94ffc",
+   "start_ms": 51500,
+   "text": "두 번째 구간은 여기서 시작합니다."
+  },
+  {
+   "end_ms": 57200,
+   "flags": [],
+   "id": "c_d189063226",
+   "start_ms": 54500,
+   "text": "숫자와 소수점 표기: 0.75배, 1.25배, 2.0배"
+  },
+  {
+   "end_ms": 60200,
+   "flags": [],
+   "id": "c_02a3e9048f",
+   "start_ms": 57500,
+   "text": "마지막 문장입니다. 감사합니다."
+  },
+  {
+   "end_ms": 63200,
+   "flags": [],
+   "id": "c_e33203e620",
+   "start_ms": 60500,
+   "text": "안녕하세요, 오늘은 테스트 영상으로 쇼츠 제작 경로를 확인합니다."
+  },
+  {
+   "end_ms": 66200,
+   "flags": [],
+   "id": "c_c624e867b4",
+   "start_ms": 63500,
+   "text": "SOXL · TQQQ · SCHD / 3.07% / 0.1%p / 1,000,000원 / 길이가 긴 한글 테스트 문장"
+  },
+  {
+   "end_ms": 69200,
+   "flags": [],
+   "id": "c_8ef995dd3a",
+   "start_ms": 66500,
+   "text": "이 문장은 줄바꿈과 글꼴 렌더링을 확인하기 위한 문자열입니다."
+  },
+  {
+   "end_ms": 72200,
+   "flags": [],
+   "id": "c_1e6aaf7c97",
+   "start_ms": 69500,
+   "text": "화면 네 모서리의 색 표식이 모두 보여야 합니다."
+  },
+  {
+   "end_ms": 75200,
+   "flags": [],
+   "id": "c_86ea043909",
+   "start_ms": 72500,
+   "text": "수동 줄바꿈 테스트\n두 번째 줄입니다."
+  },
+  {
+   "end_ms": 78200,
+   "flags": [],
+   "id": "c_e56729912f",
+   "start_ms": 75500,
+   "text": "English ticker mix: SOXX SMH 엔비디아 커버드콜 분배금"
+  },
+  {
+   "end_ms": 81200,
+   "flags": [],
+   "id": "c_68ce8a8217",
+   "start_ms": 78500,
+   "text": "여기까지가 첫 번째 구간의 마지막 문장입니다."
+  },
+  {
+   "end_ms": 84200,
+   "flags": [],
+   "id": "c_0db65f33fe",
+   "start_ms": 81500,
+   "text": "두 번째 구간은 여기서 시작합니다."
+  },
+  {
+   "end_ms": 87200,
+   "flags": [],
+   "id": "c_6615594574",
+   "start_ms": 84500,
+   "text": "숫자와 소수점 표기: 0.75배, 1.25배, 2.0배"
+  }
+ ],
+ "clips": [
+  {
+   "idx": 1,
+   "title": "SOXL · TQQQ 자막 렌더링 샘플",
+   "data": {
+    "cues": [
+     {
+      "deleted_speech": false,
+      "emphasis": [
+       [
+        0,
+        4
+       ],
+       [
+        21,
+        26
+       ]
+      ],
+      "end_ms": 6200,
+      "id": "c_99c5447be5",
+      "src_cue_id": "c_cefd4f101f",
+      "start_ms": 3500,
+      "style_override": null,
+      "text": "SOXL · TQQQ · SCHD / 3.07% / 0.1%p / 1,000,000원 / 길이가 긴 한글 테스트 문장"
+     },
+     {
+      "deleted_speech": false,
+      "emphasis": [],
+      "end_ms": 9200,
+      "id": "c_febf7b06f2",
+      "src_cue_id": "c_9fd7a4c6bb",
+      "start_ms": 6500,
+      "style_override": null,
+      "text": "이 문장은 줄바꿈과 글꼴 렌더링을 확인하기 위한 문자열입니다."
+     },
+     {
+      "deleted_speech": false,
+      "emphasis": [],
+      "end_ms": 12200,
+      "id": "c_6b5f905243",
+      "src_cue_id": "c_a94f71d1fc",
+      "start_ms": 9500,
+      "style_override": null,
+      "text": "화면 네 모서리의 색 표식이 모두 보여야 합니다."
+     },
+     {
+      "deleted_speech": false,
+      "emphasis": [],
+      "end_ms": 15200,
+      "id": "c_d21ce5d877",
+      "src_cue_id": "c_903f281ce8",
+      "start_ms": 12500,
+      "style_override": null,
+      "text": "수동 줄바꿈 테스트\n두 번째 줄입니다."
+     },
+     {
+      "deleted_speech": false,
+      "emphasis": [],
+      "end_ms": 18200,
+      "id": "c_f3efdfded8",
+      "src_cue_id": "c_50304f2f21",
+      "start_ms": 15500,
+      "style_override": null,
+      "text": "English ticker mix: SOXX SMH 엔비디아 커버드콜 분배금"
+     },
+     {
+      "deleted_speech": false,
+      "emphasis": [],
+      "end_ms": 21000,
+      "id": "c_b8233e4d2d",
+      "src_cue_id": "c_a4c2caf1c8",
+      "start_ms": 18500,
+      "style_override": null,
+      "text": "여기까지가 첫 번째 구간의 마지막 문장입니다."
+     }
+    ],
+    "cuts": [],
+    "description": "",
+    "origin": {
+     "type": "manual"
+    },
+    "range": {
+     "end_ms": 21000,
+     "start_ms": 3000
+    },
+    "render": {
+     "audio_mode": "auto"
+    },
+    "speed": 1.0,
+    "style": {
+     "schema": 1,
+     "canvas": {
+      "bg_color": "#000000",
+      "bg_asset_id": null
+     },
+     "video": {
+      "box": {
+       "x": 0,
+       "y": 600,
+       "w": 1080,
+       "h": 640
+      },
+      "fit": "contain",
+      "crop": {
+       "enabled": false,
+       "x": 0.0,
+       "y": 0.0,
+       "w": 1.0,
+       "h": 1.0
+      },
+      "masks": []
+     },
+     "title": {
+      "enabled": true,
+      "font": "nanum-square",
+      "size": 80,
+      "bold": true,
+      "color": "#FFFFFF",
+      "letter_spacing": 0,
+      "line_height": 1.2,
+      "align": "center",
+      "stroke_width": 0,
+      "stroke_color": "#000000",
+      "shadow": {
+       "enabled": false,
+       "dx": 4,
+       "dy": 4,
+       "color": "#000000",
+       "opacity": 0.6,
+       "blur": 2
+      },
+      "bg": {
+       "enabled": false,
+       "color": "#000000",
+       "opacity": 0.6,
+       "pad_x": 28,
+       "pad_y": 14,
+       "radius": 18,
+       "mode": "block"
+      },
+      "box": {
+       "x": 50,
+       "y": 220,
+       "w": 980
+      },
+      "anchor_y": "top",
+      "max_lines": 3,
+      "auto_shrink": true,
+      "min_size": 36
+     },
+     "subtitle": {
+      "enabled": true,
+      "font": "nanum-square",
+      "size": 58,
+      "bold": true,
+      "color": "#FFFFFF",
+      "letter_spacing": 0,
+      "line_height": 1.25,
+      "align": "center",
+      "stroke_width": 5,
+      "stroke_color": "#000000",
+      "shadow": {
+       "enabled": false,
+       "dx": 4,
+       "dy": 4,
+       "color": "#000000",
+       "opacity": 0.6,
+       "blur": 2
+      },
+      "bg": {
+       "enabled": false,
+       "color": "#000000",
+       "opacity": 0.6,
+       "pad_x": 28,
+       "pad_y": 14,
+       "radius": 18,
+       "mode": "block"
+      },
+      "box": {
+       "x": 60,
+       "y": 1320,
+       "w": 960
+      },
+      "anchor_y": "top",
+      "max_lines": 2,
+      "auto_shrink": true,
+      "min_size": 36
+     },
+     "emphasis": {
+      "color": "#FFD400",
+      "bold": true,
+      "scale": 1.0,
+      "bg_enabled": false,
+      "bg_color": "#000000"
+     },
+     "fixed_text": {
+      "enabled": false,
+      "font": "nanum-gothic",
+      "size": 34,
+      "bold": false,
+      "color": "#BBBBBB",
+      "letter_spacing": 0,
+      "line_height": 1.25,
+      "align": "center",
+      "stroke_width": 0,
+      "stroke_color": "#000000",
+      "shadow": {
+       "enabled": false,
+       "dx": 4,
+       "dy": 4,
+       "color": "#000000",
+       "opacity": 0.6,
+       "blur": 2
+      },
+      "bg": {
+       "enabled": false,
+       "color": "#000000",
+       "opacity": 0.6,
+       "pad_x": 28,
+       "pad_y": 14,
+       "radius": 18,
+       "mode": "block"
+      },
+      "box": {
+       "x": 60,
+       "y": 1740,
+       "w": 960
+      },
+      "anchor_y": "top",
+      "max_lines": 1,
+      "auto_shrink": true,
+      "min_size": 36,
+      "text": ""
+     },
+     "logo": {
+      "enabled": false,
+      "asset_id": null,
+      "x": 860,
+      "y": 90,
+      "w": 160,
+      "opacity": 1.0
+     },
+     "safe_area": {
+      "top": 150,
+      "bottom": 330,
+      "right": 140,
+      "show": true
+     }
+    },
+    "template": {
+     "id": "tpl_builtin_dark",
+     "name": "① 강의 보존 · 검은 배경 큰 제목",
+     "version": 1
+    },
+    "title_emphasis": []
+   }
+  },
+  {
+   "idx": 2,
+   "title": "밝은 템플릿 · 발화 삭제 · 1.25배",
+   "data": {
+    "cues": [
+     {
+      "deleted_speech": false,
+      "emphasis": [],
+      "end_ms": 27200,
+      "id": "c_e328860657",
+      "src_cue_id": "c_3829947d15",
+      "start_ms": 24500,
+      "style_override": null,
+      "text": "숫자와 소수점 표기: 0.75배, 1.25배, 2.0배"
+     },
+     {
+      "deleted_speech": true,
+      "emphasis": [],
+      "end_ms": 30200,
+      "id": "c_82edbd17f7",
+      "src_cue_id": "c_c0fa371c2e",
+      "start_ms": 27500,
+      "style_override": null,
+      "text": "마지막 문장입니다. 감사합니다."
+     },
+     {
+      "deleted_speech": false,
+      "emphasis": [],
+      "end_ms": 33200,
+      "id": "c_cb7150595c",
+      "src_cue_id": "c_9fea3e4505",
+      "start_ms": 30500,
+      "style_override": null,
+      "text": "안녕하세요, 오늘은 테스트 영상으로 쇼츠 제작 경로를 확인합니다."
+     },
+     {
+      "deleted_speech": false,
+      "emphasis": [],
+      "end_ms": 36200,
+      "id": "c_15482d9f5b",
+      "src_cue_id": "c_eebca84e56",
+      "start_ms": 33500,
+      "style_override": null,
+      "text": "SOXL · TQQQ · SCHD / 3.07% / 0.1%p / 1,000,000원 / 길이가 긴 한글 테스트 문장"
+     },
+     {
+      "deleted_speech": false,
+      "emphasis": [],
+      "end_ms": 39200,
+      "id": "c_f91129c1c2",
+      "src_cue_id": "c_59d446b85a",
+      "start_ms": 36500,
+      "style_override": null,
+      "text": "이 문장은 줄바꿈과 글꼴 렌더링을 확인하기 위한 문자열입니다."
+     },
+     {
+      "deleted_speech": false,
+      "emphasis": [],
+      "end_ms": 42200,
+      "id": "c_0f0ef9267f",
+      "src_cue_id": "c_51a6bfad91",
+      "start_ms": 39500,
+      "style_override": null,
+      "text": "화면 네 모서리의 색 표식이 모두 보여야 합니다."
+     },
+     {
+      "deleted_speech": false,
+      "emphasis": [],
+      "end_ms": 45200,
+      "id": "c_b669d3f816",
+      "src_cue_id": "c_e1369c38f4",
+      "start_ms": 42500,
+      "style_override": null,
+      "text": "수동 줄바꿈 테스트\n두 번째 줄입니다."
+     },
+     {
+      "deleted_speech": false,
+      "emphasis": [],
+      "end_ms": 48200,
+      "id": "c_e5924840a8",
+      "src_cue_id": "c_029396c444",
+      "start_ms": 45500,
+      "style_override": null,
+      "text": "English ticker mix: SOXX SMH 엔비디아 커버드콜 분배금"
+     },
+     {
+      "deleted_speech": false,
+      "emphasis": [],
+      "end_ms": 51200,
+      "id": "c_d99727e88c",
+      "src_cue_id": "c_72870d8bf1",
+      "start_ms": 48500,
+      "style_override": null,
+      "text": "여기까지가 첫 번째 구간의 마지막 문장입니다."
+     },
+     {
+      "deleted_speech": false,
+      "emphasis": [],
+      "end_ms": 54000,
+      "id": "c_18fa9c2fc4",
+      "src_cue_id": "c_9f0bc94ffc",
+      "start_ms": 51500,
+      "style_override": null,
+      "text": "두 번째 구간은 여기서 시작합니다."
+     }
+    ],
+    "cuts": [
+     {
+      "cue_id": "c_82edbd17f7",
+      "enabled": true,
+      "end_ms": 30200,
+      "id": "cut_b50087139d61",
+      "reason": "cue",
+      "start_ms": 27500
+     }
+    ],
+    "description": "",
+    "origin": {
+     "type": "manual"
+    },
+    "range": {
+     "end_ms": 54000,
+     "start_ms": 24000
+    },
+    "render": {
+     "audio_mode": "auto"
+    },
+    "speed": 1.25,
+    "style": {
+     "schema": 1,
+     "canvas": {
+      "bg_color": "#F4F1EA",
+      "bg_asset_id": null
+     },
+     "video": {
+      "box": {
+       "x": 0,
+       "y": 600,
+       "w": 1080,
+       "h": 640
+      },
+      "fit": "contain",
+      "crop": {
+       "enabled": false,
+       "x": 0.0,
+       "y": 0.0,
+       "w": 1.0,
+       "h": 1.0
+      },
+      "masks": []
+     },
+     "title": {
+      "enabled": true,
+      "font": "nanum-square",
+      "size": 76,
+      "bold": true,
+      "color": "#14213D",
+      "letter_spacing": 0,
+      "line_height": 1.22,
+      "align": "center",
+      "stroke_width": 0,
+      "stroke_color": "#000000",
+      "shadow": {
+       "enabled": false,
+       "dx": 4,
+       "dy": 4,
+       "color": "#000000",
+       "opacity": 0.6,
+       "blur": 2
+      },
+      "bg": {
+       "enabled": false,
+       "color": "#000000",
+       "opacity": 0.6,
+       "pad_x": 28,
+       "pad_y": 14,
+       "radius": 18,
+       "mode": "block"
+      },
+      "box": {
+       "x": 60,
+       "y": 230,
+       "w": 960
+      },
+      "anchor_y": "top",
+      "max_lines": 3,
+      "auto_shrink": true,
+      "min_size": 36
+     },
+     "subtitle": {
+      "enabled": true,
+      "font": "nanum-gothic",
+      "size": 54,
+      "bold": true,
+      "color": "#111111",
+      "letter_spacing": 0,
+      "line_height": 1.25,
+      "align": "center",
+      "stroke_width": 0,
+      "stroke_color": "#000000",
+      "shadow": {
+       "enabled": false,
+       "dx": 4,
+       "dy": 4,
+       "color": "#000000",
+       "opacity": 0.6,
+       "blur": 2
+      },
+      "bg": {
+       "enabled": true,
+       "color": "#FFFFFF",
+       "opacity": 0.95,
+       "pad_x": 26,
+       "pad_y": 14,
+       "radius": 16,
+       "mode": "line"
+      },
+      "box": {
+       "x": 70,
+       "y": 1330,
+       "w": 940
+      },
+      "anchor_y": "top",
+      "max_lines": 2,
+      "auto_shrink": true,
+      "min_size": 36
+     },
+     "emphasis": {
+      "color": "#D7263D",
+      "bold": true,
+      "scale": 1.0,
+      "bg_enabled": false,
+      "bg_color": "#FFE066"
+     },
+     "fixed_text": {
+      "enabled": false,
+      "font": "nanum-gothic",
+      "size": 34,
+      "bold": false,
+      "color": "#555555",
+      "letter_spacing": 0,
+      "line_height": 1.25,
+      "align": "center",
+      "stroke_width": 0,
+      "stroke_color": "#000000",
+      "shadow": {
+       "enabled": false,
+       "dx": 4,
+       "dy": 4,
+       "color": "#000000",
+       "opacity": 0.6,
+       "blur": 2
+      },
+      "bg": {
+       "enabled": false,
+       "color": "#000000",
+       "opacity": 0.6,
+       "pad_x": 28,
+       "pad_y": 14,
+       "radius": 18,
+       "mode": "block"
+      },
+      "box": {
+       "x": 60,
+       "y": 1740,
+       "w": 960
+      },
+      "anchor_y": "top",
+      "max_lines": 1,
+      "auto_shrink": true,
+      "min_size": 36,
+      "text": ""
+     },
+     "logo": {
+      "enabled": false,
+      "asset_id": null,
+      "x": 860,
+      "y": 90,
+      "w": 160,
+      "opacity": 1.0
+     },
+     "safe_area": {
+      "top": 150,
+      "bottom": 330,
+      "right": 140,
+      "show": true
+     }
+    },
+    "template": {
+     "id": "tpl_builtin_light",
+     "name": "② 자료 가독성 · 밝은 배경",
+     "version": 1
+    },
+    "title_emphasis": []
+   }
+  },
+  {
+   "idx": 3,
+   "title": "미니멀 템플릿 · 영역 확대(사용자 크롭)",
+   "data": {
+    "cues": [
+     {
+      "deleted_speech": false,
+      "emphasis": [],
+      "end_ms": 60200,
+      "id": "c_6e0f7f59f5",
+      "src_cue_id": "c_02a3e9048f",
+      "start_ms": 57500,
+      "style_override": null,
+      "text": "마지막 문장입니다. 감사합니다."
+     },
+     {
+      "deleted_speech": false,
+      "emphasis": [],
+      "end_ms": 63200,
+      "id": "c_5d8b107511",
+      "src_cue_id": "c_e33203e620",
+      "start_ms": 60500,
+      "style_override": null,
+      "text": "안녕하세요, 오늘은 테스트 영상으로 쇼츠 제작 경로를 확인합니다."
+     },
+     {
+      "deleted_speech": false,
+      "emphasis": [],
+      "end_ms": 66200,
+      "id": "c_f8084745b0",
+      "src_cue_id": "c_c624e867b4",
+      "start_ms": 63500,
+      "style_override": null,
+      "text": "SOXL · TQQQ · SCHD / 3.07% / 0.1%p / 1,000,000원 / 길이가 긴 한글 테스트 문장"
+     },
+     {
+      "deleted_speech": false,
+      "emphasis": [],
+      "end_ms": 69200,
+      "id": "c_cb2308733d",
+      "src_cue_id": "c_8ef995dd3a",
+      "start_ms": 66500,
+      "style_override": null,
+      "text": "이 문장은 줄바꿈과 글꼴 렌더링을 확인하기 위한 문자열입니다."
+     },
+     {
+      "deleted_speech": false,
+      "emphasis": [],
+      "end_ms": 72200,
+      "id": "c_d4ef3462ff",
+      "src_cue_id": "c_1e6aaf7c97",
+      "start_ms": 69500,
+      "style_override": null,
+      "text": "화면 네 모서리의 색 표식이 모두 보여야 합니다."
+     },
+     {
+      "deleted_speech": false,
+      "emphasis": [],
+      "end_ms": 75200,
+      "id": "c_e7b8663fb2",
+      "src_cue_id": "c_86ea043909",
+      "start_ms": 72500,
+      "style_override": null,
+      "text": "수동 줄바꿈 테스트\n두 번째 줄입니다."
+     },
+     {
+      "deleted_speech": false,
+      "emphasis": [],
+      "end_ms": 78200,
+      "id": "c_b9f6c078ba",
+      "src_cue_id": "c_e56729912f",
+      "start_ms": 75500,
+      "style_override": null,
+      "text": "English ticker mix: SOXX SMH 엔비디아 커버드콜 분배금"
+     },
+     {
+      "deleted_speech": false,
+      "emphasis": [],
+      "end_ms": 81200,
+      "id": "c_c80d7c3b88",
+      "src_cue_id": "c_68ce8a8217",
+      "start_ms": 78500,
+      "style_override": null,
+      "text": "여기까지가 첫 번째 구간의 마지막 문장입니다."
+     },
+     {
+      "deleted_speech": false,
+      "emphasis": [],
+      "end_ms": 84200,
+      "id": "c_c1afbfb299",
+      "src_cue_id": "c_0db65f33fe",
+      "start_ms": 81500,
+      "style_override": null,
+      "text": "두 번째 구간은 여기서 시작합니다."
+     },
+     {
+      "deleted_speech": false,
+      "emphasis": [],
+      "end_ms": 87000,
+      "id": "c_4463d6a704",
+      "src_cue_id": "c_6615594574",
+      "start_ms": 84500,
+      "style_override": null,
+      "text": "숫자와 소수점 표기: 0.75배, 1.25배, 2.0배"
+     }
+    ],
+    "cuts": [],
+    "description": "",
+    "origin": {
+     "type": "manual"
+    },
+    "range": {
+     "end_ms": 87000,
+     "start_ms": 57000
+    },
+    "render": {
+     "audio_mode": "auto"
+    },
+    "speed": 1.0,
+    "style": {
+     "schema": 1,
+     "canvas": {
+      "bg_color": "#121212",
+      "bg_asset_id": null
+     },
+     "video": {
+      "box": {
+       "x": 0,
+       "y": 520,
+       "w": 1080,
+       "h": 720
+      },
+      "fit": "contain",
+      "crop": {
+       "enabled": true,
+       "x": 0.25,
+       "y": 0.2,
+       "w": 0.5,
+       "h": 0.6
+      },
+      "masks": []
+     },
+     "title": {
+      "enabled": true,
+      "font": "nanum-gothic",
+      "size": 62,
+      "bold": true,
+      "color": "#FFFFFF",
+      "letter_spacing": 0,
+      "line_height": 1.25,
+      "align": "left",
+      "stroke_width": 0,
+      "stroke_color": "#000000",
+      "shadow": {
+       "enabled": false,
+       "dx": 4,
+       "dy": 4,
+       "color": "#000000",
+       "opacity": 0.6,
+       "blur": 2
+      },
+      "bg": {
+       "enabled": false,
+       "color": "#000000",
+       "opacity": 0.6,
+       "pad_x": 28,
+       "pad_y": 14,
+       "radius": 18,
+       "mode": "block"
+      },
+      "box": {
+       "x": 70,
+       "y": 290,
+       "w": 940
+      },
+      "anchor_y": "top",
+      "max_lines": 2,
+      "auto_shrink": true,
+      "min_size": 36
+     },
+     "subtitle": {
+      "enabled": true,
+      "font": "nanum-gothic",
+      "size": 50,
+      "bold": true,
+      "color": "#FFFFFF",
+      "letter_spacing": 0,
+      "line_height": 1.25,
+      "align": "center",
+      "stroke_width": 0,
+      "stroke_color": "#000000",
+      "shadow": {
+       "enabled": false,
+       "dx": 4,
+       "dy": 4,
+       "color": "#000000",
+       "opacity": 0.6,
+       "blur": 2
+      },
+      "bg": {
+       "enabled": true,
+       "color": "#000000",
+       "opacity": 0.55,
+       "pad_x": 22,
+       "pad_y": 12,
+       "radius": 12,
+       "mode": "block"
+      },
+      "box": {
+       "x": 80,
+       "y": 1290,
+       "w": 920
+      },
+      "anchor_y": "top",
+      "max_lines": 2,
+      "auto_shrink": true,
+      "min_size": 36
+     },
+     "emphasis": {
+      "color": "#6EE7B7",
+      "bold": true,
+      "scale": 1.0,
+      "bg_enabled": false,
+      "bg_color": "#000000"
+     },
+     "fixed_text": {
+      "enabled": false,
+      "font": "nanum-gothic",
+      "size": 32,
+      "bold": false,
+      "color": "#9CA3AF",
+      "letter_spacing": 0,
+      "line_height": 1.25,
+      "align": "left",
+      "stroke_width": 0,
+      "stroke_color": "#000000",
+      "shadow": {
+       "enabled": false,
+       "dx": 4,
+       "dy": 4,
+       "color": "#000000",
+       "opacity": 0.6,
+       "blur": 2
+      },
+      "bg": {
+       "enabled": false,
+       "color": "#000000",
+       "opacity": 0.6,
+       "pad_x": 28,
+       "pad_y": 14,
+       "radius": 18,
+       "mode": "block"
+      },
+      "box": {
+       "x": 70,
+       "y": 1760,
+       "w": 940
+      },
+      "anchor_y": "top",
+      "max_lines": 1,
+      "auto_shrink": true,
+      "min_size": 36,
+      "text": ""
+     },
+     "logo": {
+      "enabled": false,
+      "asset_id": null,
+      "x": 880,
+      "y": 110,
+      "w": 140,
+      "opacity": 0.9
+     },
+     "safe_area": {
+      "top": 150,
+      "bottom": 330,
+      "right": 140,
+      "show": true
+     }
+    },
+    "template": {
+     "id": "tpl_builtin_minimal",
+     "name": "③ 미니멀 강의형",
+     "version": 1
+    },
+    "title_emphasis": []
+   }
+  }
+ ]
+}

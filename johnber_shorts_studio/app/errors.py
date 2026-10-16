@@ -25,6 +25,7 @@ ERROR_MESSAGES: dict[str, tuple[str, bool]] = {
     "CANCELED": ("사용자가 작업을 취소했습니다.", True),
     "INTERRUPTED": ("서버가 재시작되어 작업이 중단되었습니다. 재시도할 수 있습니다.", True),
     "CLIP_EMPTY": ("남은 구간이 없습니다. 삭제한 구간을 확인하세요.", False),
+    "BUILTIN_TEMPLATE": ("기본 템플릿은 수정·삭제할 수 없습니다. 복제한 뒤 수정하세요.", False),
     "NOT_FOUND": ("대상을 찾을 수 없습니다.", False),
     "INTERNAL": ("예상하지 못한 오류가 발생했습니다. 로그를 확인하세요.", True),
 }

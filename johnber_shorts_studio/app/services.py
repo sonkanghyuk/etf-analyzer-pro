@@ -83,7 +83,7 @@ def duplicate_template(tid: str, name: str | None = None) -> dict:
 def delete_template(tid: str) -> None:
     tpl = get_template(tid)
     if tpl["builtin"]:
-        raise StudioError("NOT_FOUND", "기본 템플릿은 삭제할 수 없습니다(복제해서 수정하세요)")
+        raise StudioError("BUILTIN_TEMPLATE")
     db.execute("UPDATE templates SET deleted=1 WHERE id=?", (tid,))
 
 

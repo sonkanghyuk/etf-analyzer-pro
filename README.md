@@ -64,3 +64,8 @@ streamlit run app.py
 `yfinance`의 Fund Data가 제공하는 구성종목은 ETF에 따라 **Top Holdings** 수준일 수 있습니다. 따라서 자동 수집 상태의 중복도는 전체 포트폴리오 중복도가 아니라 확보된 구성종목 기준일 수 있습니다.
 
 정밀 비교가 필요하면 각 운용사의 전체 구성종목 CSV를 업로드하세요.
+
+## 함께 들어 있는 프로그램: 존버나드 쇼츠 스튜디오
+
+`johnber_shorts_studio/` 폴더는 긴 강의 영상에서 세로 쇼츠 MP4를 만드는 별도의 로컬 앱입니다(ETF Analyzer와 독립).
+설치·실행 방법은 [`johnber_shorts_studio/README.md`](johnber_shorts_studio/README.md)를 보세요.
