@@ -156,12 +156,22 @@ def del_project(pid: str, delete_source_copy: bool = False) -> dict:
 
 
 @app.get("/api/projects/{pid}/source")
-def project_source(pid: str):
+def project_source(pid: str, proxy: bool = False):
     p = services.get_project(pid)
     src = services.get_source(p["source_id"])
+    if proxy:
+        if not src or not src.get("proxy_path") or not Path(src["proxy_path"]).exists():
+            raise StudioError("NOT_FOUND", "미리보기 프록시")
+        return FileResponse(src["proxy_path"], media_type="video/webm")
     if not src or not Path(src["path"]).exists():
         raise StudioError("NOT_FOUND", "원본 파일")
     return FileResponse(src["path"], media_type="video/mp4")
+
+
+@app.post("/api/projects/{pid}/proxy")
+def make_proxy(pid: str) -> dict:
+    services.get_project(pid)
+    return jobs.public(jobs.create("proxy", project_id=pid, dedupe_key=f"proxy:{pid}"))  # type: ignore[return-value]
 
 
 @app.get("/api/projects/{pid}/thumb")
@@ -541,8 +551,12 @@ def create_template(body: dict) -> dict:
 
 
 @app.get("/api/templates/{tid}")
-def get_template(tid: str) -> dict:
-    return services.get_template(tid)
+def get_template(tid: str, v: int | None = None) -> dict:
+    t = services.get_template(tid)
+    if v is not None and v != t["current_version"]:
+        t["data"] = services.template_data(tid, v)
+        t["viewing_version"] = v
+    return t
 
 
 @app.put("/api/templates/{tid}")

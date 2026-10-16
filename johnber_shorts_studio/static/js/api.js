@@ -101,6 +101,11 @@ export function errMsg(e) {
   return String(e?.message || e);
 }
 
+export function fill(el, ...kids) {
+  el.replaceChildren(...kids.flat(Infinity).filter((k) => k !== null && k !== undefined && k !== false));
+  return el;
+}
+
 export const clone = (o) => JSON.parse(JSON.stringify(o));
 
 export function debounce(fn, ms) {
@@ -112,5 +117,5 @@ export const STATUS_LABEL = {
   queued: "대기", running: "실행 중", succeeded: "성공", failed: "실패", canceled: "취소됨", interrupted: "중단됨",
 };
 export const KIND_LABEL = {
-  render: "MP4 렌더링", preview: "확정 미리보기", export_zip: "ZIP 묶기", silence: "무음 감지", transcribe: "자동 전사", recommend: "AI 구간 추천",
+  render: "MP4 렌더링", preview: "확정 미리보기", export_zip: "ZIP 묶기", silence: "무음 감지", transcribe: "자동 전사", recommend: "AI 구간 추천", proxy: "미리보기 프록시",
 };

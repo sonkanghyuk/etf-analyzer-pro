@@ -78,6 +78,10 @@ MIGRATIONS: list[str] = [
     CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status);
     CREATE INDEX IF NOT EXISTS idx_clips_project ON clips(project_id);
     """,
+    # v2: 브라우저 재생용 미리보기 프록시
+    """
+    ALTER TABLE sources ADD COLUMN proxy_path TEXT;
+    """,
 ]
 
 

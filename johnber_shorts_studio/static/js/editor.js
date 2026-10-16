@@ -1,4 +1,4 @@
-import { api, h, fmtMs, parseTime, fmtDate, toast, errMsg, clone, debounce, STATUS_LABEL } from "./api.js";
+import { api, h, fill, fmtMs, parseTime, fmtDate, toast, errMsg, clone, debounce, STATUS_LABEL } from "./api.js";
 import { onJobs, jobProgress } from "./app.js";
 
 const CANVAS_W = 1080, CANVAS_H = 1920;
@@ -142,11 +142,11 @@ export async function mountEditor(root, pid, query = {}) {
     saveBtn.disabled = !S.clip || !S.dirty;
   }
   function renderBar() {
-    clipSelect.replaceChildren(h("option", { value: "" }, S.clips.length ? "— 클립 선택 —" : "— 클립 없음(오른쪽·가운데에서 만들기) —"),
+    fill(clipSelect, h("option", { value: "" }, S.clips.length ? "— 클립 선택 —" : "— 클립 없음(오른쪽·가운데에서 만들기) —"),
       ...S.clips.map((c) => h("option", { value: c.id, selected: S.clip?.id === c.id }, `${String(c.idx).padStart(2, "0")}. ${c.title}`)));
     titleInput.value = S.draft?.title ?? "";
     titleInput.disabled = !S.clip;
-    el.bar.replaceChildren(
+    fill(el.bar, 
       h("a", { href: "#/projects" }, "← 프로젝트"),
       h("b", {}, S.project.title),
       h("span", { class: "muted small" }, S.project.source ? `${fmtMs(S.project.source.duration_ms, false)} · ${S.project.source.width}×${S.project.source.height}` : ""),
@@ -165,7 +165,7 @@ export async function mountEditor(root, pid, query = {}) {
   const video = h("video", { preload: "auto", playsinline: true });
   vwrap.append(video);
   const fgImg = h("img", { class: "layer", alt: "" });
-  const cueImg = h("img", { class: "cue", alt: "" });
+  const cueImg = h("img", { class: "cueimg", alt: "" });
   const notice = h("div", { class: "notice", hidden: true });
   stage.append(bgImg, vwrap, fgImg, cueImg, notice);
   const scrub = h("input", { type: "range", min: 0, max: 1000, step: 1, value: 0 });
@@ -175,8 +175,16 @@ export async function mountEditor(root, pid, query = {}) {
   const warnBox = h("div");
   let k = 0.3;
 
+  let usingProxy = false;
+  function setVideoSource(forceProxy = false) {
+    const hasProxy = !!S.project?.source?.proxy_path;
+    const canH264 = !!video.canPlayType('video/mp4; codecs="avc1.42E01E"');
+    usingProxy = hasProxy && (forceProxy || !canH264 || S.project.source.vcodec !== "h264");
+    video.src = usingProxy ? `/api/projects/${pid}/source?proxy=1` : `/api/projects/${pid}/source`;
+  }
   video.addEventListener("error", () => {
-    S.videoError = "브라우저가 이 원본 코덱을 재생하지 못합니다. 편집은 가능하며 ‘확정 미리보기’로 실제 결과를 확인하세요.";
+    if (!usingProxy && S.project?.source?.proxy_path) { setVideoSource(true); return; }
+    S.videoError = "이 브라우저가 원본 코덱을 재생하지 못합니다. 편집·출력은 정상 동작합니다. 미리보기 재생용 프록시(저해상도 WebM, 로컬 처리)를 만들거나 ‘확정 미리보기’로 실제 결과를 확인하세요.";
     layoutStage();
   });
 
@@ -199,7 +207,9 @@ export async function mountEditor(root, pid, query = {}) {
       return;
     }
     notice.hidden = !S.videoError;
-    notice.textContent = S.videoError || "";
+    fill(notice, S.videoError || "", S.videoError ? h("div", { style: { marginTop: "8px" } }, h("button", { class: "small primary", onclick: async () => {
+      try { await api.post(`/api/projects/${pid}/proxy`); toast("미리보기 프록시를 만드는 중입니다(작업 상태 참고)"); } catch (e) { toast(errMsg(e), true); }
+    } }, "재생용 프록시 만들기")) : null);
     const sc = S.scene;
     bgImg.src = sc.background_url;
     fgImg.src = sc.foreground_url;
@@ -208,7 +218,7 @@ export async function mountEditor(root, pid, query = {}) {
     Object.assign(vwrap.style, { left: v.x * k + "px", top: v.y * k + "px", width: v.w * k + "px", height: v.h * k + "px" });
     const vk = (v.w / v.crop.w) * k;
     Object.assign(video.style, { width: v.src_w * vk + "px", height: v.src_h * vk + "px", left: -v.crop.x * vk + "px", top: -v.crop.y * vk + "px" });
-    if (!video.src) video.src = `/api/projects/${pid}/source`;
+    if (!video.getAttribute("src")) setVideoSource();
     video.playbackRate = sc.speed;
     if ("preservesPitch" in video) video.preservesPitch = true;
     updateCueOverlay();
@@ -408,7 +418,7 @@ export async function mountEditor(root, pid, query = {}) {
   scrub.addEventListener("input", () => { pause(); seekOut(Number(scrub.value)); });
 
   function renderLeft() {
-    el.left.replaceChildren(
+    fill(el.left, 
       h("div", { class: "phead row" }, h("b", {}, "9:16 미리보기"), h("div", { class: "spacer" }), h("label", { class: "small row" }, safeChk, "안전영역")),
       h("div", { class: "stage-wrap" }, stage,
         h("div", { class: "transport" }, h("div", { class: "row" }, playBtn,
@@ -424,7 +434,7 @@ export async function mountEditor(root, pid, query = {}) {
     const c = currentSceneCue();
     if (c) ws.push(...c.warnings.map((w) => ({ ...w, element: "현재 자막" })));
     const longCues = (S.scene?.cues || []).filter((x) => x.warnings.some((w) => w.code === "too_many_lines" || w.code === "out_of_canvas"));
-    warnBox.replaceChildren(
+    fill(warnBox, 
       ...ws.map((w) => h("div", { class: "warnbox" }, (w.element ? `[${{ title: "제목", fixed_text: "고정문구" }[w.element] || w.element}] ` : "") + w.message)),
       longCues.length ? h("div", { class: "warnbox" }, `넘침 경고가 있는 자막 ${longCues.length}개 — 가운데 목록에서 ‘⚠’ 표시를 확인하세요.`) : null,
     );
@@ -433,7 +443,7 @@ export async function mountEditor(root, pid, query = {}) {
   // ---------------------------------------------------------- 가운데: 자막·전사
   const midBody = h("div", { class: "pbody" });
   function renderMid() {
-    el.mid.replaceChildren(
+    fill(el.mid, 
       h("div", { class: "phead" },
         h("div", { class: "tabs" },
           h("button", { class: S.midTab === "clip" ? "active" : "", onclick: () => { S.midTab = "clip"; renderMid(); } }, "클립 자막"),
@@ -471,7 +481,7 @@ export async function mountEditor(root, pid, query = {}) {
     const cues = S.draft.data.cues;
     const f = S.filter.trim();
     const list = cues.filter((c) => !f || c.text.includes(f));
-    midBody.replaceChildren(
+    fill(midBody, 
       h("div", { class: "infobox" }, "글자 수정은 자막 텍스트만 바꿉니다(영상·음성 그대로). 그 말 자체를 영상에서 빼려면 ‘발화 삭제’를 누르세요 — 되돌릴 수 있습니다."),
       !cues.length ? h("div", { class: "warnbox" }, "이 클립 구간에 자막이 없습니다. ‘전사문·구간 선택’ 탭에서 SRT를 불러오거나 수동 자막을 입력한 뒤 ‘전사문에서 자막 다시 가져오기’를 누르세요.") : null,
       h("div", { class: "row", style: { margin: "6px 0" } },
@@ -635,7 +645,7 @@ export async function mountEditor(root, pid, query = {}) {
       rangeForm());
 
     if (!tr.working) {
-      midBody.replaceChildren(sources, rangeBox, h("p", { class: "muted" }, "전사문이 없습니다. SRT/VTT를 불러오거나 수동 자막을 입력하거나 자동 전사를 실행하세요. 자막이 없어도 수동 구간으로 클립을 만들 수 있습니다."));
+      fill(midBody, sources, rangeBox, h("p", { class: "muted" }, "전사문이 없습니다. SRT/VTT를 불러오거나 수동 자막을 입력하거나 자동 전사를 실행하세요. 자막이 없어도 수동 구간으로 클립을 만들 수 있습니다."));
       return;
     }
     const cues = S.transcriptDraft;
@@ -644,7 +654,7 @@ export async function mountEditor(root, pid, query = {}) {
     for (const s of tr.suggestions || []) { if (!sugBy.has(s.cue_id)) sugBy.set(s.cue_id, []); sugBy.get(s.cue_id).push(s); }
     const f = S.filter.trim();
     const shown = cues.filter((c) => !f || c.text.includes(f)).slice(0, 1500);
-    midBody.replaceChildren(sources, rangeBox,
+    fill(midBody, sources, rangeBox,
       h("div", { class: "row", style: { margin: "6px 0" } },
         h("span", { class: "small" }, `전사 작업본 v${tr.working.version} · ${cues.length}문장 · 출처 ${tr.working.origin}${tr.working.model ? " / " + tr.working.model : ""}`),
         h("div", { class: "spacer" }),
@@ -721,7 +731,7 @@ export async function mountEditor(root, pid, query = {}) {
   const rightBody = h("div", { class: "pbody" });
   function renderRight() {
     const tabs = [["ai", "AI 추천"], ["style", "스타일·템플릿"], ["range", "구간·속도"], ["export", "내보내기"]];
-    el.right.replaceChildren(h("div", { class: "phead" }, h("div", { class: "tabs" }, tabs.map(([id, label]) =>
+    fill(el.right, h("div", { class: "phead" }, h("div", { class: "tabs" }, tabs.map(([id, label]) =>
       h("button", { class: S.rightTab === id ? "active" : "", onclick: () => { S.rightTab = id; renderRight(); } }, label)))), rightBody);
     if (S.rightTab === "ai") renderAI();
     else if (S.rightTab === "style") renderStyle();
@@ -737,7 +747,7 @@ export async function mountEditor(root, pid, query = {}) {
     const num = (key, min, max) => h("input", { type: "number", min, max, value: recSettings[key], onchange: (e) => { recSettings[key] = Number(e.target.value); S.estimate = null; } });
     const hasTr = !!S.transcript.working;
     const latest = S.recs[0];
-    rightBody.replaceChildren(
+    fill(rightBody, 
       h("div", { class: "card" },
         h("div", { class: "row" }, h("b", {}, "AI 구간 추천"), h("span", { class: "badge " + (st.connected ? "ai" : "") }, st.connected ? `연결됨 · ${st.model}` : "미연결")),
         !st.connected ? h("div", { class: "warnbox" }, "AI 제공자가 연결되지 않았습니다(.env의 ANTHROPIC_API_KEY). 가짜 추천은 만들지 않습니다. SRT·수동 자막·수동 구간·스타일 편집·MP4 출력은 그대로 쓸 수 있습니다.") : null,
@@ -803,10 +813,10 @@ export async function mountEditor(root, pid, query = {}) {
 
   // 스타일
   function renderStyle() {
-    if (!S.clip) { rightBody.replaceChildren(h("p", { class: "muted" }, "클립을 선택하세요.")); return; }
+    if (!S.clip) { fill(rightBody, h("p", { class: "muted" }, "클립을 선택하세요.")); return; }
     const els = [["video", "영상"], ["title", "제목"], ["subtitle", "일반 자막"], ["emphasis", "강조 자막"], ["fixed_text", "고정문구"], ["logo", "로고"], ["canvas", "배경"], ["safe_area", "안전영역"]];
     const st = S.draft.data.style;
-    rightBody.replaceChildren(
+    fill(rightBody, 
       h("div", { class: "tabs", style: { marginBottom: "8px" } }, els.map(([id, label]) => h("button", { class: S.styleEl === id ? "active" : "", onclick: () => { S.styleEl = id; if (ELEMENT_LABEL[id]) S.sel = id; renderRight(); layoutStage(); } }, label))),
       styleForm(S.styleEl, st),
       templateBox());
@@ -870,10 +880,9 @@ export async function mountEditor(root, pid, query = {}) {
     if (ELEMENT_LABEL[name] || name === "emphasis" || name === "canvas") {
       reset = h("button", { class: "small", onclick: async () => {
         const t = S.draft.data.template;
-        const tpl = t?.id ? await api.get(`/api/templates/${t.id}`).catch(() => null) : null;
-        if (!tpl) return toast("기준 템플릿을 찾을 수 없습니다", true);
-        const base = tpl.versions.includes(t.version) ? null : tpl.data;
-        const data = base || (await fetchTemplateVersion(t.id, t.version));
+        if (!t?.id) return toast("기준 템플릿이 없습니다", true);
+        let data;
+        try { data = await fetchTemplateVersion(t.id, t.version); } catch (e) { return toast(errMsg(e), true); }
         st[name] = clone(data[name]);
         markDirty(`${name} 기본값 복구`); renderRight();
       } }, "이 요소 템플릿 값으로 복구");
@@ -882,9 +891,8 @@ export async function mountEditor(root, pid, query = {}) {
       ELEMENT_LABEL[name] ? h("span", { class: "small muted" }, "미세 이동: 미리보기 클릭 후 방향키(Shift=10px)") : null));
   }
   async function fetchTemplateVersion(tid, v) {
-    // 클립이 적용한 시점의 버전 데이터(서버 미리보기 API와 같은 데이터)
-    const tpl = await api.get(`/api/templates/${tid}`);
-    return tpl.current_version === v ? tpl.data : (await api.get(`/api/templates/${tid}?v=${v}`)).data;
+    // 클립이 적용한 시점의 템플릿 버전 데이터
+    return (await api.get(`/api/templates/${tid}?v=${v}`)).data;
   }
   function deepMerge(a, b) {
     const out = clone(a);
@@ -963,7 +971,7 @@ export async function mountEditor(root, pid, query = {}) {
 
   // 구간·속도
   function renderRange() {
-    if (!S.clip) { rightBody.replaceChildren(h("p", { class: "muted" }, "클립을 선택하세요.")); return; }
+    if (!S.clip) { fill(rightBody, h("p", { class: "muted" }, "클립을 선택하세요.")); return; }
     const d = S.draft.data;
     const sm = S.clip.summary;
     const sIn = h("input", { type: "text", value: fmtMs(d.range.start_ms), style: { width: "110px" } });
@@ -978,7 +986,7 @@ export async function mountEditor(root, pid, query = {}) {
     const sj = latestJob("silence", S.clip.id);
     const silParams = S.silParams || (S.silParams = { noise_db: -35, min_ms: 700, keep_ms: 150 });
     const silResult = sj?.status === "succeeded" ? sj.result : null;
-    rightBody.replaceChildren(
+    fill(rightBody, 
       h("div", { class: "card" }, h("b", {}, "구간"),
         h("div", { class: "row", style: { marginTop: "6px" } }, "원본 시작", sIn, "끝", eIn, h("button", { class: "small", onclick: applyRange }, "적용")),
         h("div", { class: "small muted", style: { marginTop: "6px" } }, `원본 ${fmtMs(sm.source_ms)} − 삭제 ${fmtMs(sm.removed_ms)} = 편집 ${fmtMs(sm.edited_ms)} ÷ ${sm.speed}배 = 출력 ${fmtMs(sm.output_ms)} (저장 기준)`)),
@@ -1046,11 +1054,10 @@ export async function mountEditor(root, pid, query = {}) {
   let arts = [];
   async function loadArtifacts() { arts = await api.get(`/api/artifacts?project_id=${pid}`); }
   function renderExport() {
-    if (!S.clip) { rightBody.replaceChildren(exportBatch()); return; }
+    if (!S.clip) { fill(rightBody, exportBatch()); return; }
     const mine = arts.filter((a) => a.clip_id === S.clip.id);
     const rj = latestJob("render", S.clip.id), pj = latestJob("preview", S.clip.id);
-    const previews = [];
-    rightBody.replaceChildren(
+    fill(rightBody, 
       h("div", { class: "card" }, h("b", {}, "이 클립"),
         h("div", { class: "row", style: { marginTop: "6px" } },
           h("button", { class: "primary", disabled: isActive(rj), onclick: () => startRender(false) }, isActive(rj) ? "렌더링 중…" : "MP4 렌더링"),
@@ -1063,18 +1070,12 @@ export async function mountEditor(root, pid, query = {}) {
         pj ? h("div", {}, h("span", { class: "small" }, "확정 미리보기: "), jobProgress(pj), pj.error_message ? h("div", { class: "errbox" }, pj.error_message) : null) : null,
         h("label", { class: "small" }, "설명(제목·설명 TXT에 포함)"),
         h("textarea", { rows: 2, oninput: (e) => { S.draft.data.description = e.target.value; markDirty("설명 수정", false); } }, S.draft.data.description || "")),
-      ...previewsOf(previews),
       h("h3", {}, "완성본"),
       mine.length ? h("table", { class: "list small" }, mine.map((a) => h("tr", {},
         h("td", {}, h("div", {}, a.filename), h("div", { class: "muted" }, `${fmtMs(a.duration_ms)} · ${a.probe?.width}×${a.probe?.height} · ${fmtDate(a.created_at)}`),
           a.meta?.clip_updated_at && a.meta.clip_updated_at < S.clip.updated_at ? h("span", { class: "badge warn" }, "이후 편집됨 — 다시 렌더링 필요") : h("span", { class: "badge ok" }, "최신 편집 반영")),
         h("td", {}, a.exists ? h("a", { href: `/api/artifacts/${a.id}/download` }, "저장") : "파일 없음")))) : h("p", { class: "muted small" }, "아직 없음"),
       exportBatch());
-  }
-  function previewsOf() {
-    const p = arts.length ? null : null;
-    void p;
-    return [];
   }
   function exportBatch() {
     const box = h("div", { class: "card", style: { marginTop: "12px" } }, h("b", {}, "여러 클립 일괄 내보내기"),
@@ -1117,11 +1118,15 @@ export async function mountEditor(root, pid, query = {}) {
 
   let lastJobsSig = "";
   disposers.push(onJobs(async (finished) => {
+    if (!S.project || !S.status) return;
     if (finished && finished.project_id === pid) {
       if (finished.kind === "transcribe" && finished.status === "succeeded") await reloadTranscript();
       if (finished.kind === "recommend" && finished.status === "succeeded") { S.recs = await api.get(`/api/projects/${pid}/recommendations`); S.project = await api.get(`/api/projects/${pid}`); }
       if (["render", "preview", "export_zip"].includes(finished.kind)) await loadArtifacts();
+      if (finished.kind === "proxy" && finished.status === "succeeded") { S.project = await api.get(`/api/projects/${pid}`); S.videoError = null; setVideoSource(true); layoutStage(); }
       if (finished.kind === "preview" && finished.status === "succeeded") showPreviewVideo(finished.result.artifact_id);
+      if (document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") renderRight();
+      return;
     }
     const sig = JSON.stringify(((window.__jss?.state?.jobs) || []).filter((j) => j.project_id === pid).slice(0, 20).map((j) => [j.id, j.status, Math.round((j.progress || 0) * 50), j.stage]));
     if (sig !== lastJobsSig) {

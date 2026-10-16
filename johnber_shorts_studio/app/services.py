@@ -335,6 +335,9 @@ def _cues_for_range(pid: str, start: int, end: int) -> list[dict]:
     for c in tr["cues"]:
         if c["end_ms"] <= start or c["start_ms"] >= end:
             continue
+        # 구간 경계에 걸려 300ms 미만만 남는 조각은 제외(원래 짧은 자막은 유지)
+        if min(end, c["end_ms"]) - max(start, c["start_ms"]) < min(300, c["end_ms"] - c["start_ms"]):
+            continue
         out.append({"id": subtitles.new_cue_id(), "src_cue_id": c["id"], "start_ms": max(start, c["start_ms"]),
                     "end_ms": min(end, c["end_ms"]), "text": c["text"], "emphasis": [], "style_override": None,
                     "deleted_speech": False})

@@ -15,7 +15,7 @@ from typing import Callable
 from . import config, db, media
 from .errors import StudioError
 
-RENDER_KINDS = {"render", "preview", "export_zip", "silence"}
+RENDER_KINDS = {"render", "preview", "export_zip", "silence", "proxy"}
 ANALYSIS_KINDS = {"transcribe", "recommend"}
 TERMINAL = {"succeeded", "failed", "canceled", "interrupted"}
 

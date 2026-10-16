@@ -1,4 +1,4 @@
-import { api, h, fmtMs, fmtDate, fmtSize, toast, errMsg, STATUS_LABEL, KIND_LABEL } from "./api.js";
+import { api, h, fill, fmtMs, fmtDate, fmtSize, toast, errMsg, STATUS_LABEL, KIND_LABEL } from "./api.js";
 import { mountEditor } from "./editor.js";
 
 const view = document.getElementById("view");
@@ -7,13 +7,16 @@ window.__jss = { state };
 
 // ------------------------------------------------------------ 작업 상태(실제 서버 상태를 폴링)
 const known = new Map();
+const pageStart = Date.now() / 1000;
 async function pollJobs() {
   try {
     const list = await api.get("/api/jobs");
     state.jobs = list;
     for (const j of list) {
       const prev = known.get(j.id);
-      if (prev && prev !== j.status && ["succeeded", "failed", "canceled", "interrupted"].includes(j.status)) {
+      const terminal = ["succeeded", "failed", "canceled", "interrupted"].includes(j.status);
+      const newlyDone = prev ? prev !== j.status : j.created_at > pageStart - 2;
+      if (terminal && newlyDone) {
         for (const fn of state.jobListeners) fn(j);
         if (j.status === "failed") toast(`${KIND_LABEL[j.kind] || j.kind} 실패: ${j.error_message || ""}`, true, 7000);
         if (j.status === "succeeded") toast(`${KIND_LABEL[j.kind] || j.kind} 완료`);
@@ -49,7 +52,7 @@ export function jobProgress(j) {
 
 async function renderDrawer() {
   const d = document.getElementById("drawer");
-  d.replaceChildren(
+  fill(d, 
     h("div", { class: "row" }, h("h2", { style: { margin: 0 } }, "작업 상태"), h("div", { class: "spacer" }), h("button", { onclick: () => d.classList.add("hidden") }, "닫기")),
     h("p", { class: "muted small" }, "진행률은 FFmpeg·전사 엔진이 실제로 보고한 값입니다. 측정할 수 없는 단계는 단계명과 경과 시간만 표시합니다."),
     ...state.jobs.slice(0, 40).map((j) =>
@@ -86,7 +89,7 @@ async function route() {
   const [, page, id] = path.split("/");
   const query = Object.fromEntries(new URLSearchParams(qs || ""));
   document.querySelectorAll("nav.main a").forEach((a) => a.classList.toggle("active", a.dataset.nav === page || (page === "project" && a.dataset.nav === "projects")));
-  view.replaceChildren();
+  fill(view, );
   try {
     if (page === "project" && id) state.unmount = await mountEditor(view, id, query);
     else if (page === "templates") await pageTemplates();
@@ -102,7 +105,7 @@ window.addEventListener("hashchange", route);
 async function loadStatus() {
   state.status = await api.get("/api/status");
   const s = state.status;
-  document.getElementById("sysBadges").replaceChildren(
+  fill(document.getElementById("sysBadges"), 
     h("span", { class: "badge " + (s.ffmpeg.found ? "ok" : "err") }, s.ffmpeg.found ? "FFmpeg 정상" : "FFmpeg 없음"),
     h("span", { class: "badge " + (s.ai.connected ? "ai" : "") }, s.ai.connected ? `AI: ${s.ai.model}` : "AI 미연결"),
     h("span", { class: "badge " + (s.transcribe.installed ? "" : "err") }, s.transcribe.installed ? "로컬 전사 엔진 설치됨" : "전사 엔진 없음"),
@@ -127,16 +130,16 @@ async function pageProjects() {
     const fd = new FormData();
     fd.append("file", file);
     fd.append("title", titleIn.value);
-    upStatus.replaceChildren(h("div", {}, `업로드 중: ${file.name}`), h("div", { class: "progress" }, h("div", { style: { width: "0%" } })));
+    fill(upStatus, h("div", {}, `업로드 중: ${file.name}`), h("div", { class: "progress" }, h("div", { style: { width: "0%" } })));
     try {
       const p = await api.upload("/api/projects/upload", fd, (r) => {
         upStatus.querySelector(".progress > div").style.width = (r * 100).toFixed(1) + "%";
         if (r >= 1) upStatus.firstChild.textContent = "업로드 완료 — 영상 검사 중(길이·해상도·음성·해시)…";
       });
-      upStatus.replaceChildren(h("div", { class: "infobox" }, `등록 완료: ${p.title}`));
+      fill(upStatus, h("div", { class: "infobox" }, `등록 완료: ${p.title}`));
       location.hash = `#/project/${p.id}`;
     } catch (e) {
-      upStatus.replaceChildren(h("div", { class: "errbox" }, errMsg(e)));
+      fill(upStatus, h("div", { class: "errbox" }, errMsg(e)));
     }
   }
   fileInput.onchange = () => fileInput.files[0] && doUpload(fileInput.files[0]);
@@ -145,18 +148,18 @@ async function pageProjects() {
   drop.ondrop = (e) => { e.preventDefault(); drop.classList.remove("over"); e.dataTransfer.files[0] && doUpload(e.dataTransfer.files[0]); };
 
   async function fromPath() {
-    upStatus.replaceChildren(h("div", { class: "progress indeterminate" }, h("div")));
+    fill(upStatus, h("div", { class: "progress indeterminate" }, h("div")));
     try {
       const p = await api.post("/api/projects/from-path", { path: pathIn.value, title: titleIn.value });
       location.hash = `#/project/${p.id}`;
-    } catch (e) { upStatus.replaceChildren(h("div", { class: "errbox" }, errMsg(e))); }
+    } catch (e) { fill(upStatus, h("div", { class: "errbox" }, errMsg(e))); }
   }
 
   async function refresh() {
     let items;
     try { items = await api.get("/api/projects" + (q ? `?q=${encodeURIComponent(q)}` : "")); }
-    catch (e) { listBox.replaceChildren(h("div", { class: "errbox" }, errMsg(e))); return; }
-    if (!items.length) { listBox.replaceChildren(h("p", { class: "muted" }, q ? "검색 결과가 없습니다." : "아직 프로젝트가 없습니다. 위에서 긴 영상을 등록하세요.")); return; }
+    catch (e) { fill(listBox, h("div", { class: "errbox" }, errMsg(e))); return; }
+    if (!items.length) { fill(listBox, h("p", { class: "muted" }, q ? "검색 결과가 없습니다." : "아직 프로젝트가 없습니다. 위에서 긴 영상을 등록하세요.")); return; }
     const actions = (p) => h("div", { class: "row" },
       h("button", { class: "small primary", onclick: () => (location.hash = `#/project/${p.id}`) }, "열기"),
       h("button", { class: "small", onclick: async () => { const t = prompt("새 이름", p.title); if (t) { await api.patch(`/api/projects/${p.id}`, { title: t }); refresh(); } } }, "이름 변경"),
@@ -168,7 +171,7 @@ async function pageProjects() {
       return h("span", { class: "badge " + c }, t);
     };
     if (mode === "card") {
-      listBox.replaceChildren(h("div", { class: "grid" }, items.map((p) => h("div", { class: "pcard" },
+      fill(listBox, h("div", { class: "grid" }, items.map((p) => h("div", { class: "pcard" },
         h("img", { src: `/api/projects/${p.id}/thumb`, alt: "", onerror: (e) => (e.target.style.visibility = "hidden") }),
         h("div", { class: "body" },
           h("div", { class: "title" }, p.title),
@@ -177,7 +180,7 @@ async function pageProjects() {
           h("div", { class: "small muted" }, `생성 ${fmtDate(p.created_at)} · 해시 ${p.source?.sha256?.slice(0, 10) || "-"}`),
           actions(p))))));
     } else {
-      listBox.replaceChildren(h("table", { class: "list" },
+      fill(listBox, h("table", { class: "list" },
         h("tr", {}, ["제목", "길이", "해상도", "fps", "음성", "상태", "클립", "생성", ""].map((t) => h("th", {}, t))),
         items.map((p) => h("tr", {},
           h("td", {}, p.title), h("td", {}, fmtMs(p.source?.duration_ms, false)), h("td", {}, p.source ? `${p.source.width}×${p.source.height}` : "-"),
@@ -201,7 +204,7 @@ async function pageProjects() {
       h("button", { class: mode === "card" ? "primary small" : "small", onclick: () => { mode = "card"; localStorage.setItem("jss.projView", mode); pageRerender(); } }, "카드"),
       h("button", { class: mode === "list" ? "primary small" : "small", onclick: () => { mode = "list"; localStorage.setItem("jss.projView", mode); pageRerender(); } }, "목록")),
     listBox);
-  function pageRerender() { view.replaceChildren(); pageProjects(); }
+  function pageRerender() { fill(view, ); pageProjects(); }
   refresh();
 }
 

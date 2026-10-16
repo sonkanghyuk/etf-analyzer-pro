@@ -117,5 +117,32 @@ def handle_silence(job: dict, ctx: jobs.JobContext) -> dict:
             "total_ms": sum(s["end_ms"] - s["start_ms"] for s in suggestions)}
 
 
+@jobs.register("proxy")
+def handle_proxy(job: dict, ctx: jobs.JobContext) -> dict:
+    """브라우저가 원본 코덱을 재생하지 못할 때 쓰는 저해상도 WebM. 타임스탬프는 원본과 같다(편집·출력에는 쓰지 않음)."""
+    project = services.get_project(job["project_id"])
+    source = services.get_source(project["source_id"])
+    if not source:
+        raise StudioError("NOT_FOUND", "원본")
+    out = config.CACHE_DIR / "proxies" / f"{source['sha256'][:32]}.webm"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    if not out.exists():
+        tmp = out.with_suffix(".part.webm")
+        args = ["-i", source["path"], "-vf", "scale=640:-2", "-c:v", "libvpx-vp9", "-deadline", "realtime", "-cpu-used", "8",
+                "-row-mt", "1", "-b:v", "600k"]
+        args += (["-c:a", "libopus", "-b:a", "96k"] if source["has_audio"] else ["-an"])
+        args += ["-f", "webm", str(tmp)]
+        code = media.run_ffmpeg(args, source["duration_ms"], lambda p: ctx.progress(p, "프록시 인코딩"), ctx.handle, ctx.log_lines)
+        if ctx.canceled:
+            tmp.unlink(missing_ok=True)
+            raise StudioError("CANCELED")
+        if code != 0:
+            tmp.unlink(missing_ok=True)
+            raise StudioError("RENDER_FAILED", f"프록시 ffmpeg 종료 코드 {code}")
+        tmp.replace(out)
+    db.execute("UPDATE sources SET proxy_path=? WHERE id=?", (str(out), source["id"]))
+    return {"proxy": out.name}
+
+
 # 전사·추천 처리기는 각 모듈에서 등록한다
 from . import recommend, transcribe  # noqa: E402,F401

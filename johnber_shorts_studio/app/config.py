@@ -8,7 +8,7 @@ from pathlib import Path
 APP_ROOT = Path(__file__).resolve().parent.parent
 APP_NAME = "존버나드 쇼츠 스튜디오"
 APP_NAME_EN = "Johnber Shorts Studio"
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 
 def _load_dotenv() -> None:
