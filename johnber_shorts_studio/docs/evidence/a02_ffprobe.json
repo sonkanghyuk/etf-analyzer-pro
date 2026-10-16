@@ -1,0 +1,16 @@
+{
+ "acodec": "aac",
+ "audio_kind": "source",
+ "audio_sample_rate": 48000,
+ "duration_ms": 18000,
+ "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+ "fps": 30.0,
+ "has_audio": true,
+ "has_video": true,
+ "height": 1920,
+ "pix_fmt": "yuv420p",
+ "rotation": null,
+ "size": 532732,
+ "vcodec": "h264",
+ "width": 1080
+}
