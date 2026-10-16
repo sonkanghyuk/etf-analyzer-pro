@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "clipora-shorts"
+version = "0.1.0"
+description = "촬영본(강의·강연·인터뷰)을 AI로 하이라이트를 골라 자막 입힌 9:16 숏폼 MP4로 만드는 프로그램"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "faster-whisper>=1.2.1",
+    "anthropic>=1.13.0",
+]
+
+[project.optional-dependencies]
+face = ["opencv-python-headless>=4.11"]
+test = ["pytest>=8"]
+
+[project.scripts]
+clipora-shorts = "clipora_shorts.cli:main"
+
+[tool.setuptools]
+packages = ["clipora_shorts"]
