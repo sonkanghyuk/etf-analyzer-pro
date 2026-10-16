@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>존버나드 쇼츠 스튜디오</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">존버나드 <span>쇼츠</span> 스튜디오</div>
+    <nav class="main row">
+      <a href="#/projects" data-nav="projects">프로젝트</a>
+      <a href="#/templates" data-nav="templates">템플릿·에셋</a>
+      <a href="#/outputs" data-nav="outputs">완성 영상</a>
+      <a href="#/settings" data-nav="settings">설정</a>
+    </nav>
+    <div class="spacer"></div>
+    <span id="sysBadges" class="row small"></span>
+    <button id="jobsBtn" title="작업 상태">작업<span class="count" id="jobsCount" hidden>0</span></button>
+  </header>
+  <main id="view"></main>
+  <aside id="drawer" class="hidden"></aside>
+  <div id="toast"></div>
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
