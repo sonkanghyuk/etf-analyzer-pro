@@ -31,7 +31,7 @@ jobs:
         run: python tests/check_real_asr.py
       - name: GPU requested without CUDA falls back to CPU
         timeout-minutes: 10
-        run: python -m clipora_shorts tests/fixtures/speech_ko.mp4 --device cuda --whisper tiny --no-ai --min 8 --max 30 --plan-only -o gpu_out
+        run: python -m clipora_shorts tests/fixtures/speech_en.mp4 --language en --device cuda --whisper tiny --no-ai --min 8 --max 20 --plan-only -o gpu_out
       - name: GUI self-test
         timeout-minutes: 6
         run: xvfb-run -a python -m clipora_shorts.gui --selftest

@@ -29,6 +29,35 @@ def transcribe(
     return _transcribe(audio, offset, model_size, language, "cpu", on_progress)
 
 
+def _run(model, samples, language, offset, on_progress, vad: bool):
+    segments, info = model.transcribe(
+        samples,
+        language=language or None,
+        word_timestamps=True,
+        vad_filter=vad,
+        beam_size=5,
+    )
+    out = []
+    for seg in segments:  # 실제 인식은 여기서 하나씩 진행됩니다
+        text = seg.text.strip()
+        if not text:
+            continue
+        out.append({
+            "id": len(out),
+            "start": round(seg.start + offset, 3),
+            "end": round(seg.end + offset, 3),
+            "text": text,
+            "words": [
+                {"start": round(w.start + offset, 3), "end": round(w.end + offset, 3), "word": w.word.strip()}
+                for w in (seg.words or [])
+                if w.word.strip()
+            ],
+        })
+        if on_progress and info.duration:
+            on_progress(min(1.0, seg.end / info.duration))
+    return out, info
+
+
 def load_wav(path: Path):
     """ffmpeg로 뽑은 16kHz 모노 16비트 WAV → float32 배열.
 
@@ -50,32 +79,11 @@ def _transcribe(audio, offset, model_size, language, device, on_progress) -> dic
     # CPU에서는 int8이 빠르고 품질 차이가 거의 없습니다.
     compute_type = "int8" if device == "cpu" else "default"
     model = WhisperModel(model_size, device=device, compute_type=compute_type)
-    segments, info = model.transcribe(
-        load_wav(audio),
-        language=language or None,
-        word_timestamps=True,
-        vad_filter=True,
-        beam_size=5,
-    )
-
-    out = []
-    for seg in segments:  # 실제 인식은 여기서 하나씩 진행됩니다
-        text = seg.text.strip()
-        if not text:
-            continue
-        out.append({
-            "id": len(out),
-            "start": round(seg.start + offset, 3),
-            "end": round(seg.end + offset, 3),
-            "text": text,
-            "words": [
-                {"start": round(w.start + offset, 3), "end": round(w.end + offset, 3), "word": w.word.strip()}
-                for w in (seg.words or [])
-                if w.word.strip()
-            ],
-        })
-        if on_progress and info.duration:
-            on_progress(min(1.0, seg.end / info.duration))
+    samples = load_wav(audio)
+    out, info = _run(model, samples, language, offset, on_progress, vad=True)
+    if not out:
+        # 배경음악이 깔렸거나 소리가 작으면 음성 구간 감지(VAD)가 말을 다 걸러 버릴 수 있어 한 번 더 시도합니다.
+        out, info = _run(model, samples, language, offset, on_progress, vad=False)
     return {"language": info.language, "duration": info.duration, "offset": offset, "segments": out}
 
 
