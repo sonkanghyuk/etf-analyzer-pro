@@ -55,6 +55,10 @@ jobs:
         run: |
           .venv\Scripts\python.exe -m pip install --quiet pytest
           .venv\Scripts\python.exe -m pytest -q tests
+      - name: Check Korean subtitle font (should be Malgun Gothic)
+        working-directory: clipora-shorts/Clipora_샘플/결과/.work
+        run: |
+          ffmpeg -hide_banner -v debug -f lavfi -i color=s=1080x1920:d=0.5 -vf "ass=filename=01.ass:fontsdir='C\:/Windows/Fonts'" -f null - 2>&1 | Select-String "fontselect|Glyph not found" | Select-Object -First 8
       - name: Tk probe (Python 3.12 / venv)
         timeout-minutes: 3
         continue-on-error: true
