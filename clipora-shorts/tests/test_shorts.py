@@ -173,3 +173,55 @@ def test_end_to_end_vertical_video(tmp_path):
     assert probe.stdout.strip() == "1080,1920"
     plan = json.loads((out / "clips.json").read_text(encoding="utf-8"))
     assert plan["method"] == "heuristic" and plan["clips"][0]["captions"]
+
+
+@pytest.mark.skipif(not shutil.which("ffmpeg"), reason="ffmpeg 필요")
+def test_transcribe_passes_audio_array_not_path(tmp_path, monkeypatch):
+    """PyAV 버전과 상관없도록 Whisper에는 파일 경로 대신 오디오 배열을 넘깁니다."""
+    import numpy as np
+
+    from clipora_shorts import media, transcribe
+
+    wav = tmp_path / "a.wav"
+    src = tmp_path / "v.mp4"
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-f", "lavfi", "-i", "sine=f=300:d=3", str(src)], check=True)
+    media.extract_audio(src, wav, 1.0, 3.0)
+    audio = transcribe.load_wav(wav)
+    assert audio.dtype == np.float32 and abs(len(audio) - 32000) < 400 and 0 < np.abs(audio).max() <= 1.0
+
+    seen = {}
+
+    class FakeModel:
+        def __init__(self, size, device, compute_type):
+            seen["init"] = (size, device, compute_type)
+
+        def transcribe(self, audio, **kw):
+            seen["audio"] = audio
+            word = SimpleNamespace(start=0.1, end=0.5, word=" 안녕")
+            seg = SimpleNamespace(start=0.1, end=0.5, text=" 안녕", words=[word])
+            return iter([seg]), SimpleNamespace(language="ko", duration=2.0)
+
+    import faster_whisper
+
+    monkeypatch.setattr(faster_whisper, "WhisperModel", FakeModel)
+    data = transcribe.transcribe(wav, offset=1.0, model_size="tiny")
+    assert isinstance(seen["audio"], np.ndarray)
+    assert seen["init"] == ("tiny", "cpu", "int8")
+    assert data["segments"][0]["start"] == 1.1 and data["segments"][0]["words"][0]["word"] == "안녕"
+
+
+def test_gpu_failure_falls_back_to_cpu(monkeypatch, tmp_path):
+    from clipora_shorts import transcribe
+
+    calls = []
+
+    def fake(audio, offset, size, lang, device, prog):
+        calls.append(device)
+        if device != "cpu":
+            raise RuntimeError("Library cublas64_12.dll is not found or cannot be loaded")
+        return {"segments": []}
+
+    monkeypatch.setattr(transcribe, "_transcribe", fake)
+    logs = []
+    transcribe.transcribe(tmp_path / "x.wav", device="cuda", log=logs.append)
+    assert calls == ["cuda", "cpu"] and "CPU" in logs[0]

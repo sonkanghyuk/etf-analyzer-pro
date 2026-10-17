@@ -7,6 +7,7 @@ transcript 형식:
 """
 
 import json
+import wave
 from pathlib import Path
 from typing import Callable
 
@@ -28,6 +29,21 @@ def transcribe(
     return _transcribe(audio, offset, model_size, language, "cpu", on_progress)
 
 
+def load_wav(path: Path):
+    """ffmpeg로 뽑은 16kHz 모노 16비트 WAV → float32 배열.
+
+    faster-whisper에 파일 경로를 주면 내부에서 PyAV로 읽는데, PyAV 최신판(15+)과
+    호환이 깨져 'metadata_errors' 오류가 납니다. 그래서 직접 읽어 배열로 넘깁니다.
+    """
+    import numpy as np
+
+    with wave.open(str(path), "rb") as w:
+        if w.getsampwidth() != 2 or w.getnchannels() != 1 or w.getframerate() != 16000:
+            raise ValueError(f"16kHz 모노 16비트 WAV가 아니에요: {path}")
+        frames = w.readframes(w.getnframes())
+    return np.frombuffer(frames, dtype="<i2").astype(np.float32) / 32768.0
+
+
 def _transcribe(audio, offset, model_size, language, device, on_progress) -> dict:
     from faster_whisper import WhisperModel
 
@@ -35,7 +51,7 @@ def _transcribe(audio, offset, model_size, language, device, on_progress) -> dic
     compute_type = "int8" if device == "cpu" else "default"
     model = WhisperModel(model_size, device=device, compute_type=compute_type)
     segments, info = model.transcribe(
-        str(audio),
+        load_wav(audio),
         language=language or None,
         word_timestamps=True,
         vad_filter=True,
