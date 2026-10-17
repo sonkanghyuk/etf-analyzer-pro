@@ -150,7 +150,18 @@ def write_summary(out: Path, results: list[dict], source: str, method: str) -> P
     return path
 
 
+def use_utf8_output() -> None:
+    """Windows에서 출력이 파일·파이프로 가면 cp1252/cp949가 돼서 한글·이모지에서 멈추는 걸 막습니다."""
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            try:
+                stream.reconfigure(encoding="utf-8", errors="replace")
+            except (ValueError, OSError):
+                pass
+
+
 def main(argv: list[str] | None = None) -> int:
+    use_utf8_output()
     args = build_parser().parse_args(argv)
     if args.list_templates:
         for t in templates.TEMPLATES.values():

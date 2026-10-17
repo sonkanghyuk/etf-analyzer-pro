@@ -47,7 +47,8 @@ def build_filter(info: VideoInfo, tpl: Template, face_x: float | None, ass_name:
                 f"color=c={tpl.bg}:s={PLAY_W}x{PLAY_H}:r=30[bg];"
                 f"[0:v]scale={PLAY_W}:{fh},setsar=1[fg];[bg][fg]overlay=0:{oy}:shortest=1[base]"
             )
-    ass = f"ass={ass_name}" + (f":fontsdir='{_escape(fontsdir)}'" if fontsdir else "")
+    # 옵션 이름을 명시해야 ffmpeg 8 이상에서도 동작합니다 (위치 인자 해석이 바뀜).
+    ass = f"ass=filename={ass_name}" + (f":fontsdir='{_escape(fontsdir)}'" if fontsdir else "")
     return graph + f";[base]fps=30,{ass},format=yuv420p[v]"
 
 

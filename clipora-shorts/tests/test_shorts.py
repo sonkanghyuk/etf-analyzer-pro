@@ -145,7 +145,7 @@ def test_filter_crops_around_face_and_handles_vertical_sources():
     wide = VideoInfo(duration=60, width=1920, height=1080, has_audio=True)
     g = render.build_filter(wide, templates.get("talk"), face_x=0.8, ass_name="01.ass", fontsdir=None)
     # 1920x1080 → 높이 1920에 맞추면 폭 3414, 얼굴 중심 0.8 → x = 0.8*3414 - 540
-    assert "scale=3414:1920,crop=1080:1920:2191:0" in g and g.endswith("ass=01.ass,format=yuv420p[v]")
+    assert "scale=3414:1920,crop=1080:1920:2191:0" in g and g.endswith("ass=filename=01.ass,format=yuv420p[v]")
     g = render.build_filter(wide, templates.get("talk"), face_x=0.99, ass_name="a.ass", fontsdir=None)
     assert "crop=1080:1920:2334:0" in g  # 오른쪽 끝을 넘지 않음
     fit = render.build_filter(wide, templates.get("blur"), None, "a.ass", "C:\\Fonts")
