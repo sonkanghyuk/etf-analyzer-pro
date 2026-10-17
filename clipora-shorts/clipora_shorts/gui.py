@@ -46,8 +46,8 @@ def open_folder(path: Path) -> None:
 
 
 class App:
-    def __init__(self, root: tk.Tk, initial: str | None = None, on_done=None):
-        self.root, self.on_done = root, on_done
+    def __init__(self, root: tk.Tk, initial: str | None = None, on_done=None, echo: bool = False):
+        self.root, self.on_done, self.echo = root, on_done, echo
         self.q: queue.Queue = queue.Queue()
         self.running = False
         self.out_dir: Path | None = None
@@ -213,6 +213,9 @@ class App:
         self.root.after(100, self.poll)
 
     def append(self, s: str):
+        if self.echo:  # 자체 시험 때는 콘솔에도 그대로 남깁니다
+            sys.__stdout__.write(s)
+            sys.__stdout__.flush()
         self.log.configure(state="normal")
         for i, part in enumerate(s.split("\r")):
             if i > 0:  # 진행 막대(\r): 현재 줄을 덮어씁니다
@@ -253,15 +256,26 @@ def main(argv: list[str] | None = None) -> int:
 
     def done(code):
         result["code"] = code
-        result["log"] = app.log.get("1.0", "end")
         root.after(200, root.destroy)
 
-    app = App(root, initial=files[0] if files else None, on_done=done if selftest else None)
+    app = App(root, initial=files[0] if files else None, on_done=done if selftest else None, echo=selftest)
     if selftest:  # 설치 확인용: 창을 띄우고 샘플을 만든 뒤 스스로 닫힘
-        root.after(300, lambda: app.run(demo=True))
+        def say(msg):
+            sys.__stdout__.write(f"[selftest] {msg}\n")
+            sys.__stdout__.flush()
+
+        def watchdog():
+            say("시간 초과 - 4분 안에 끝나지 않았어요")
+            os._exit(3)
+
+        timer = threading.Timer(240, watchdog)
+        timer.daemon = True
+        timer.start()
+        say("창 만듦")
+        root.after(300, lambda: (say("샘플 작업 시작"), app.run(demo=True)))
     root.mainloop()
     if selftest:
-        sys.stdout.write(result.get("log", ""))
+        say(f"끝 (code={result['code']})")
         return result["code"] if result["code"] is not None else 1
     return 0
 

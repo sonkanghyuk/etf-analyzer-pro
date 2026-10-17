@@ -27,6 +27,7 @@ jobs:
       - run: pip install ".[face,test]"
       - run: pytest -q tests
       - name: GUI self-test
+        timeout-minutes: 6
         run: xvfb-run -a python -m clipora_shorts.gui --selftest
 
   windows:
@@ -55,6 +56,7 @@ jobs:
           .venv\Scripts\python.exe -m pip install --quiet pytest
           .venv\Scripts\python.exe -m pytest -q tests
       - name: GUI self-test
+        timeout-minutes: 6
         run: .venv\Scripts\python.exe -m clipora_shorts.gui --selftest
       - uses: actions/upload-artifact@v4
         if: always()
