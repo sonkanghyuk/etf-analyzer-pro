@@ -55,6 +55,12 @@ jobs:
         run: |
           .venv\Scripts\python.exe -m pip install --quiet pytest
           .venv\Scripts\python.exe -m pytest -q tests
+      - name: Tk probe (Python 3.12 / venv)
+        timeout-minutes: 3
+        continue-on-error: true
+        run: |
+          python -c "import sys, tkinter; print(sys.version); r = tkinter.Tk(); print('tk', r.tk.call('info', 'patchlevel')); r.update(); r.destroy(); print('ok')"
+          .venv\Scripts\python.exe -c "import sys, tkinter; print(sys.version); r = tkinter.Tk(); print('tk', r.tk.call('info', 'patchlevel')); r.update(); r.destroy(); print('ok')"
       - name: GUI self-test
         timeout-minutes: 6
         run: .venv\Scripts\python.exe -m clipora_shorts.gui --selftest

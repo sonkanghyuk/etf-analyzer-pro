@@ -214,7 +214,7 @@ class App:
 
     def append(self, s: str):
         if self.echo:  # 자체 시험 때는 콘솔에도 그대로 남깁니다
-            sys.__stdout__.write(s)
+            sys.__stdout__.buffer.write(s.encode("utf-8", "replace"))
             sys.__stdout__.flush()
         self.log.configure(state="normal")
         for i, part in enumerate(s.split("\r")):
@@ -251,7 +251,24 @@ def main(argv: list[str] | None = None) -> int:
     argv = sys.argv[1:] if argv is None else argv
     selftest = "--selftest" in argv
     files = [a for a in argv if not a.startswith("--")]
+
+    def say(msg):
+        if selftest:
+            sys.__stdout__.buffer.write(f"[selftest] {msg}\n".encode("utf-8", "replace"))
+            sys.__stdout__.flush()
+
+    if selftest:
+        def watchdog():
+            say("timeout: not finished in 4 minutes")
+            os._exit(3)
+
+        timer = threading.Timer(240, watchdog)
+        timer.daemon = True
+        timer.start()
+        say(f"python {sys.version.split()[0]}, tk {tk.TkVersion}")
+
     root = tk.Tk()
+    say("Tk() ok")
     result = {"code": None}
 
     def done(code):
@@ -259,23 +276,12 @@ def main(argv: list[str] | None = None) -> int:
         root.after(200, root.destroy)
 
     app = App(root, initial=files[0] if files else None, on_done=done if selftest else None, echo=selftest)
+    say("window built")
     if selftest:  # 설치 확인용: 창을 띄우고 샘플을 만든 뒤 스스로 닫힘
-        def say(msg):
-            sys.__stdout__.write(f"[selftest] {msg}\n")
-            sys.__stdout__.flush()
-
-        def watchdog():
-            say("시간 초과 - 4분 안에 끝나지 않았어요")
-            os._exit(3)
-
-        timer = threading.Timer(240, watchdog)
-        timer.daemon = True
-        timer.start()
-        say("창 만듦")
-        root.after(300, lambda: (say("샘플 작업 시작"), app.run(demo=True)))
+        root.after(300, lambda: (say("demo started"), app.run(demo=True)))
     root.mainloop()
     if selftest:
-        say(f"끝 (code={result['code']})")
+        say(f"finished code={result['code']}")
         return result["code"] if result["code"] is not None else 1
     return 0
 
