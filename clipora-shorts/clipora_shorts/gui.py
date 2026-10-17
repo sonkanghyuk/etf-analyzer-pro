@@ -125,6 +125,8 @@ class App:
         self.demo_btn.pack(side="left", padx=6)
         self.open_btn = ttk.Button(btns, text="📂 결과 폴더 열기", command=lambda: open_folder(self.out_dir), state="disabled")
         self.open_btn.pack(side="right")
+        self.copy_btn = ttk.Button(btns, text="📋 기록 복사", command=self.copy_log)
+        self.copy_btn.pack(side="right", padx=6)
 
         self.bar = ttk.Progressbar(f, mode="indeterminate")
         self.bar.grid(row=4, column=0, columnspan=3, sticky="ew", pady=8)
@@ -229,6 +231,24 @@ class App:
         self.log.delete("1.0", "end")
         self.log.configure(state="disabled")
 
+    def log_text(self) -> str:
+        return self.log.get("1.0", "end").strip()
+
+    def copy_log(self):
+        self.root.clipboard_clear()
+        self.root.clipboard_append(self.log_text())
+        messagebox.showinfo("Clipora Shorts", "기록을 복사했어요. 채팅창에 붙여넣어 보내 주세요.")
+
+    def save_log(self) -> Path | None:
+        """실패했을 때 기록을 파일로 남깁니다 (사용자 설정 폴더/마지막_기록.txt)."""
+        try:
+            path = config.path().parent / "마지막_기록.txt"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(self.log_text(), encoding="utf-8")
+            return path
+        except OSError:
+            return None
+
     def finish(self, code: int):
         self.running = False
         self.bar.stop()
@@ -244,7 +264,12 @@ class App:
             if messagebox.askyesno("Clipora Shorts", "숏폼을 다 만들었어요! 결과 폴더를 열까요?"):
                 open_folder(self.out_dir)
         else:
-            messagebox.showerror("Clipora Shorts", "만들지 못했어요. 아래 기록을 확인해 주세요.")
+            saved = self.save_log()
+            messagebox.showerror(
+                "Clipora Shorts",
+                "만들지 못했어요.\n\n'📋 기록 복사' 버튼을 눌러 기록을 보내 주시면 바로 고칠게요."
+                + (f"\n\n기록 파일: {saved}" if saved else ""),
+            )
 
 
 def main(argv: list[str] | None = None) -> int:

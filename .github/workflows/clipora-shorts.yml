@@ -26,6 +26,12 @@ jobs:
       - run: sudo apt-get update -q && sudo apt-get install -y -q ffmpeg fonts-noto-cjk xvfb
       - run: pip install ".[face,test]"
       - run: pytest -q tests
+      - name: Real speech recognition (Whisper) end to end
+        timeout-minutes: 15
+        run: python tests/check_real_asr.py
+      - name: GPU requested without CUDA falls back to CPU
+        timeout-minutes: 10
+        run: python -m clipora_shorts tests/fixtures/speech_ko.mp4 --device cuda --whisper tiny --no-ai --min 8 --max 30 --plan-only -o gpu_out
       - name: GUI self-test
         timeout-minutes: 6
         run: xvfb-run -a python -m clipora_shorts.gui --selftest
@@ -53,8 +59,11 @@ jobs:
           & .\설치하기.bat
       - name: Tests
         run: |
-          .venv\Scripts\python.exe -m pip install --quiet pytest
-          .venv\Scripts\python.exe -m pytest -q tests
+          & "$env:LOCALAPPDATA\Clipora\venv\Scripts\python.exe" -m pip install --quiet pytest
+          & "$env:LOCALAPPDATA\Clipora\venv\Scripts\python.exe" -m pytest -q tests
+      - name: Real speech recognition (Whisper) end to end
+        timeout-minutes: 15
+        run: '& "$env:LOCALAPPDATA\Clipora\venv\Scripts\python.exe" tests\check_real_asr.py'
       - name: Check Korean subtitle font (should be Malgun Gothic)
         working-directory: clipora-shorts/Clipora_샘플/결과/.work
         run: |
@@ -64,10 +73,10 @@ jobs:
         continue-on-error: true
         run: |
           python -c "import sys, tkinter; print(sys.version); r = tkinter.Tk(); print('tk', r.tk.call('info', 'patchlevel')); r.update(); r.destroy(); print('ok')"
-          .venv\Scripts\python.exe -c "import sys, tkinter; print(sys.version); r = tkinter.Tk(); print('tk', r.tk.call('info', 'patchlevel')); r.update(); r.destroy(); print('ok')"
+          & "$env:LOCALAPPDATA\Clipora\venv\Scripts\python.exe" -c "import sys, tkinter; print(sys.version); r = tkinter.Tk(); print('tk', r.tk.call('info', 'patchlevel')); r.update(); r.destroy(); print('ok')"
       - name: GUI self-test
         timeout-minutes: 6
-        run: .venv\Scripts\python.exe -m clipora_shorts.gui --selftest
+        run: '& "$env:LOCALAPPDATA\Clipora\venv\Scripts\python.exe" -m clipora_shorts.gui --selftest'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -114,3 +123,6 @@ jobs:
         run: |
           .venv/bin/python -m pip install --quiet pytest
           .venv/bin/python -m pytest -q tests
+      - name: Real speech recognition (Whisper) end to end
+        timeout-minutes: 15
+        run: .venv/bin/python tests/check_real_asr.py

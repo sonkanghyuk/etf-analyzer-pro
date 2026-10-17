@@ -16,13 +16,23 @@ def transcribe(
     offset: float = 0.0,
     model_size: str = "small",
     language: str = "ko",
-    device: str = "auto",
+    device: str = "cpu",
     on_progress: Callable[[float], None] | None = None,
+    log: Callable[[str], None] = print,
 ) -> dict:
+    if device != "cpu":
+        try:
+            return _transcribe(audio, offset, model_size, language, device, on_progress)
+        except Exception as e:  # GPU 라이브러리(cuBLAS/cuDNN)가 없으면 흔히 여기서 실패합니다
+            log(f"\n  ⚠ GPU로 음성인식을 못 했어요 ({type(e).__name__}: {str(e)[:120]}) → CPU로 다시 합니다")
+    return _transcribe(audio, offset, model_size, language, "cpu", on_progress)
+
+
+def _transcribe(audio, offset, model_size, language, device, on_progress) -> dict:
     from faster_whisper import WhisperModel
 
     # CPU에서는 int8이 빠르고 품질 차이가 거의 없습니다.
-    compute_type = "int8" if device in ("auto", "cpu") else "default"
+    compute_type = "int8" if device == "cpu" else "default"
     model = WhisperModel(model_size, device=device, compute_type=compute_type)
     segments, info = model.transcribe(
         str(audio),
@@ -33,7 +43,7 @@ def transcribe(
     )
 
     out = []
-    for seg in segments:
+    for seg in segments:  # 실제 인식은 여기서 하나씩 진행됩니다
         text = seg.text.strip()
         if not text:
             continue

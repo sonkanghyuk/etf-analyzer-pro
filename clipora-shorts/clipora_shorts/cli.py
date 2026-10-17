@@ -59,7 +59,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--model", default=highlights.DEFAULT_MODEL, help=f"Claude 모델, 기본 {highlights.DEFAULT_MODEL}")
     p.add_argument("--whisper", default="small", help="Whisper 모델: tiny/base/small/medium/large-v3, 기본 small")
     p.add_argument("--language", default="ko", help="음성 언어, 기본 ko")
-    p.add_argument("--device", default="auto", help="음성인식 장치: auto/cpu/cuda")
+    p.add_argument("--device", default="cpu", choices=["cpu", "cuda", "auto"],
+                   help="음성인식 장치: cpu(기본) / cuda(NVIDIA GPU, 실패하면 자동으로 CPU)")
     p.add_argument("--transcript", type=Path, help="이미 만든 transcript.json 사용 (음성인식 건너뜀)")
     p.add_argument("--font", default=render.default_font(), help="자막 글꼴 이름")
     p.add_argument("--fontsdir", help="글꼴 파일(.ttf/.otf)이 있는 폴더")
@@ -116,8 +117,19 @@ def get_transcript(args, info, out: Path, start: float, end: float) -> dict:
     media.extract_audio(args.video, wav, start, end)
     log(f"📝 음성인식 중 (Whisper {args.whisper}, 처음 실행 시 모델을 내려받아요)")
     t0 = time.time()
-    data = transcribe.transcribe(wav, offset=start, model_size=args.whisper, language=args.language,
-                                 device=args.device, on_progress=progress_bar("음성인식"))
+    try:
+        data = transcribe.transcribe(wav, offset=start, model_size=args.whisper, language=args.language,
+                                     device=args.device, on_progress=progress_bar("음성인식"), log=log)
+    except ImportError as e:
+        raise SystemExit(f"\n❌ 음성인식 프로그램이 설치되지 않았어요 ({e}). 설치하기를 다시 실행해 주세요.")
+    except Exception as e:
+        text = f"{type(e).__name__}: {e}"
+        mod = type(e).__module__ or ""
+        network = any(m in mod for m in ("huggingface_hub", "httpx", "requests", "urllib3", "socket", "ssl")) or any(
+            k in text for k in ("Hub", "Connection", "Proxy", "resolve", "SSL", "timed out", "LocalEntryNotFound", "HTTP"))
+        if network:
+            raise SystemExit(f"\n❌ 음성인식 모델(Whisper {args.whisper})을 내려받지 못했어요. 인터넷 연결이나 회사 방화벽을 확인해 주세요.\n   {text[:300]}")
+        raise SystemExit(f"\n❌ 음성인식 중 오류가 났어요: {text[:400]}")
     progress_bar("음성인식")(1.0)
     log(f"  문장 {len(data['segments'])}개 인식 ({time.time() - t0:.0f}초)")
     data["key"] = key

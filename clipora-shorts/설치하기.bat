@@ -4,6 +4,8 @@ set "PYTHONUTF8=1"
 set "PYTHONIOENCODING=utf-8"
 setlocal EnableDelayedExpansion
 cd /d "%~dp0"
+rem 경로가 길면(바탕화면 압축 풀기 등) 설치가 깨질 수 있어 실행 환경은 짧은 경로에 둡니다
+set "VENV=%LOCALAPPDATA%\Clipora\venv"
 title Clipora Shorts 설치
 set "PATH=%PATH%;%LOCALAPPDATA%\Microsoft\WinGet\Links"
 
@@ -41,14 +43,14 @@ if errorlevel 1 (
 )
 echo [2/5] ffmpeg 확인
 
-if not exist ".venv\Scripts\python.exe" (
+if not exist "%VENV%\Scripts\python.exe" (
   echo [3/5] 실행 환경 만드는 중...
-  "!PY!" -m venv .venv
+  "!PY!" -m venv "%VENV%"
   if errorlevel 1 goto :fail
 )
 echo [4/5] 필요한 프로그램 설치 중입니다. 처음엔 5분 정도 걸려요...
-".venv\Scripts\python.exe" -m pip install --upgrade pip --quiet --disable-pip-version-check
-".venv\Scripts\python.exe" -m pip install ".[face]" --quiet --disable-pip-version-check
+"%VENV%\Scripts\python.exe" -m pip install --upgrade pip --quiet --disable-pip-version-check
+"%VENV%\Scripts\python.exe" -m pip install ".[face]" --quiet --disable-pip-version-check
 if errorlevel 1 goto :fail
 
 if not defined CLIPORA_NONINTERACTIVE (
@@ -57,12 +59,12 @@ if not defined CLIPORA_NONINTERACTIVE (
   echo 없으면 그냥 Enter - 나중에 프로그램 창에서 넣어도 돼요.
   set "KEY="
   set /p "KEY=API 키: "
-  if defined KEY ".venv\Scripts\python.exe" -c "import sys; from clipora_shorts import config; d = config.load(); d['anthropic_api_key'] = sys.argv[1].strip(); config.save(d)" "!KEY!"
+  if defined KEY "%VENV%\Scripts\python.exe" -c "import sys; from clipora_shorts import config; d = config.load(); d['anthropic_api_key'] = sys.argv[1].strip(); config.save(d)" "!KEY!"
 )
 
 echo.
 echo [5/5] 샘플 영상으로 잘 되는지 확인하는 중...
-".venv\Scripts\python.exe" -m clipora_shorts --demo --quality fast
+"%VENV%\Scripts\python.exe" -m clipora_shorts --demo --quality fast
 if errorlevel 1 goto :fail
 
 echo.
@@ -81,7 +83,7 @@ exit /b 1
 
 :findpy
 set "PY="
-for %%V in (314 313 312 311 310) do (
+for %%V in (312 313 311 310 314) do (
   if not defined PY if exist "%LOCALAPPDATA%\Programs\Python\Python%%V\python.exe" set "PY=%LOCALAPPDATA%\Programs\Python\Python%%V\python.exe"
   if not defined PY if exist "%ProgramFiles%\Python%%V\python.exe" set "PY=%ProgramFiles%\Python%%V\python.exe"
 )

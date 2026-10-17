@@ -1,3 +1,5 @@
 build/
 *.egg-info/
 __pycache__/
+asr_out/
+Clipora_샘플/
