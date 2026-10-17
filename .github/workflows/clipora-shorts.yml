@@ -1,0 +1,104 @@
+# Clipora Shorts가 실제 Windows / macOS / Linux에서 설치·실행되는지 확인합니다.
+name: Clipora Shorts
+
+on:
+  push:
+    paths: ["clipora-shorts/**", ".github/workflows/clipora-shorts.yml"]
+  pull_request:
+    paths: ["clipora-shorts/**", ".github/workflows/clipora-shorts.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: clipora-shorts
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: sudo apt-get update -q && sudo apt-get install -y -q ffmpeg fonts-noto-cjk xvfb
+      - run: pip install ".[face,test]"
+      - run: pytest -q tests
+      - name: GUI self-test
+        run: xvfb-run -a python -m clipora_shorts.gui --selftest
+
+  windows:
+    # 사용자와 같은 방법: 설치하기.bat → 샘플 확인 → 창(GUI) 자체 시험
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: clipora-shorts
+        shell: pwsh
+    env:
+      CLIPORA_NONINTERACTIVE: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install ffmpeg
+        run: choco install ffmpeg -y --no-progress
+      - name: Run 설치하기.bat
+        run: |
+          $env:PATH = "C:\ProgramData\chocolatey\bin;$env:PATH"
+          & .\설치하기.bat
+      - name: Tests
+        run: |
+          .venv\Scripts\python.exe -m pip install --quiet pytest
+          .venv\Scripts\python.exe -m pytest -q tests
+      - name: GUI self-test
+        run: .venv\Scripts\python.exe -m clipora_shorts.gui --selftest
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-sample-shorts
+          path: clipora-shorts/Clipora_샘플/결과
+          if-no-files-found: ignore
+
+  windows-winget:
+    # ffmpeg가 없는 PC처럼: 설치하기.bat가 winget으로 직접 설치하는 경로 확인
+    runs-on: windows-latest
+    timeout-minutes: 30
+    continue-on-error: true
+    defaults:
+      run:
+        working-directory: clipora-shorts
+        shell: pwsh
+    env:
+      CLIPORA_NONINTERACTIVE: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check winget
+        run: winget --version
+      - name: Run 설치하기.bat (winget installs ffmpeg)
+        run: |
+          if (Get-Command ffmpeg -ErrorAction SilentlyContinue) { Write-Host "ffmpeg already on PATH: $((Get-Command ffmpeg).Source)" }
+          & .\설치하기.bat
+
+  macos:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: clipora-shorts
+    env:
+      CLIPORA_NONINTERACTIVE: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run 설치하기.command
+        run: ./설치하기.command
+      - name: Tests
+        run: |
+          .venv/bin/python -m pip install --quiet pytest
+          .venv/bin/python -m pytest -q tests

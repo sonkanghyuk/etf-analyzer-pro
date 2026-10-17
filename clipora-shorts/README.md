@@ -19,48 +19,38 @@
 └─ transcript.json ← 음성인식 결과 (다시 실행하면 재사용)
 ```
 
-## 설치
+## 가장 쉬운 방법 (Windows)
 
-1. **Python 3.10 이상** — https://www.python.org/downloads/ (Windows는 설치 화면에서 "Add python.exe to PATH" 체크)
-2. **ffmpeg**
-   - Windows: `winget install Gyan.FFmpeg`
-   - macOS: `brew install ffmpeg`
-   - Ubuntu: `sudo apt install ffmpeg`
-3. **이 프로그램**
+1. **내려받기** — https://github.com/sonkanghyuk/etf-analyzer-pro/archive/refs/heads/claude/ai-editing-site-i3emy1.zip
+   압축을 풀고 안의 `clipora-shorts` 폴더를 원하는 곳(예: 바탕화면)에 둡니다.
+2. **`설치하기.bat` 더블클릭** (처음 한 번만, 5~10분)
+   Python·ffmpeg가 없으면 자동으로 설치하고, 마지막에 샘플 영상으로 숏폼을 만들어 잘 되는지 확인합니다.
+   중간에 Claude API 키를 물어보면 붙여넣거나 그냥 Enter를 누르세요.
+   "Windows의 PC 보호" 창이 뜨면 **추가 정보 → 실행**을 누르면 됩니다.
+3. **`숏폼만들기.bat` 더블클릭** → 창이 뜨면 영상 파일을 고르고 **✨ 숏폼 만들기**.
+   영상 파일을 `숏폼만들기.bat` 아이콘 위에 끌어다 놓아도 됩니다.
+   다 되면 결과 폴더(`영상이름_shorts`)가 열립니다.
 
-   ```bash
-   cd clipora-shorts
-   pip install ".[face]"      # face = 얼굴 따라 자르기(OpenCV). 빼고 설치해도 됩니다.
-   ```
+macOS는 같은 폴더의 `설치하기.command` → `숏폼만들기.command`를 더블클릭하세요(Homebrew 필요).
 
-4. **Claude API 키** (하이라이트를 내용으로 고르려면) — https://console.anthropic.com 에서 발급
+**Claude API 키**는 https://console.anthropic.com/settings/keys 에서 발급받아 프로그램 창의 "Claude API 키" 칸에 넣으면 이 PC에 저장됩니다. 키가 없어도 동작하지만, 있으면 Claude가 내용을 이해하고 하이라이트와 제목을 고릅니다.
 
-   ```bash
-   # Windows (PowerShell)
-   setx ANTHROPIC_API_KEY "sk-ant-..."     # 새 터미널부터 적용
-   # macOS / Linux
-   export ANTHROPIC_API_KEY="sk-ant-..."
-   ```
+## 직접 설치 (개발자용)
 
-   키가 없으면 규칙 기반(말이 빽빽하고 문장 경계에서 끝나는 구간)으로 고릅니다.
+1. Python 3.10 이상, ffmpeg (`winget install Gyan.FFmpeg` / `brew install ffmpeg` / `sudo apt install ffmpeg`)
+2. `pip install ".[face]"` (face = 얼굴 따라 자르기, OpenCV)
+3. API 키: 환경 변수 `ANTHROPIC_API_KEY` 또는 창 화면에서 저장
 
-## 사용법
+## 명령어로 쓰기
 
 ```bash
-# 기본: 5분당 1개, 20~60초, 블러 배경 템플릿
-clipora-shorts 강의.mp4
-
-# 2부(10분~40분)에서만 5개, 강연 템플릿
-clipora-shorts 강연.mov -n 5 --start 10:00 --end 40:00 -t blur
-
-# 인터뷰를 화면 꽉 채우게 (얼굴 따라 자르기), 채널 성격 반영
-clipora-shorts 인터뷰.mp4 -t talk --persona "20대 직장인 대상 커리어 채널, 반말 금지"
-
-# 먼저 어떤 구간이 뽑히는지만 보기 (영상은 안 만듦)
-clipora-shorts 강의.mp4 --plan-only
+clipora-shorts 강의.mp4                       # 기본: 5분당 1개, 20~60초, 블러 템플릿
+clipora-shorts 강연.mov -n 5 --start 10:00 --end 40:00
+clipora-shorts 인터뷰.mp4 -t talk --persona "20대 직장인 대상 커리어 채널"
+clipora-shorts 강의.mp4 --plan-only           # 어떤 구간이 뽑히는지만 보기
+clipora-shorts --demo                         # 샘플 영상으로 설치 확인
+python -m clipora_shorts.gui                  # 창 화면
 ```
-
-설치 없이 실행하려면 `python -m clipora_shorts 강의.mp4`도 됩니다.
 
 ### 주요 옵션
 
@@ -114,7 +104,10 @@ pytest tests
 
 | 파일 | 역할 |
 |---|---|
+| `설치하기.bat`, `숏폼만들기.bat` (+ `.command`) | 원클릭 설치 · 실행 |
+| `clipora_shorts/gui.py` | 창 화면 (tkinter) |
 | `clipora_shorts/cli.py` | 명령행, 전체 흐름 |
+| `config.py`, `sample.py` | API 키 저장, 설치 확인용 샘플 |
 | `media.py` | ffprobe/ffmpeg 호출, 음성 추출 |
 | `transcribe.py` | faster-whisper 음성인식 (단어 단위 타임스탬프) |
 | `highlights.py` | Claude / 규칙 기반 하이라이트 선정과 검증 |

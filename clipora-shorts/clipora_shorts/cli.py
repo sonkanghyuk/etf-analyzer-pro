@@ -15,7 +15,7 @@ import time
 from dataclasses import asdict
 from pathlib import Path
 
-from . import __version__, captions, highlights, media, render, templates, transcribe
+from . import __version__, captions, config, highlights, media, render, sample, templates, transcribe
 
 
 def parse_time(value: str) -> float:
@@ -67,6 +67,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--no-loudnorm", action="store_true", help="음량 평준화(-14 LUFS) 끄기")
     p.add_argument("--plan-only", action="store_true", help="영상은 만들지 않고 하이라이트 목록만 출력")
     p.add_argument("--list-templates", action="store_true", help="템플릿 목록 보기")
+    p.add_argument("--demo", action="store_true", help="샘플 영상으로 설치 확인 (인터넷·API 키 불필요)")
     p.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     return p
 
@@ -155,6 +156,19 @@ def main(argv: list[str] | None = None) -> int:
         for t in templates.TEMPLATES.values():
             print(f"  {t.id:8s} {t.name} — {t.desc}")
         return 0
+    config.apply_api_key()
+    if args.demo:
+        try:
+            media.require_tools()
+        except media.MediaError as e:
+            log(f"❌ {e}")
+            return 1
+        base = (args.out.parent if args.out else Path.cwd() / "Clipora_샘플")
+        log("🧪 샘플 영상으로 시험합니다 (음성인식·AI 없이 규칙 기반)")
+        args.video, args.transcript = sample.create(base)
+        args.no_ai, args.min_len, args.max_len = True, 15, 40
+        args.count = args.count or 2
+        args.out = args.out or base / "결과"
     if not args.video:
         build_parser().print_help()
         return 2
