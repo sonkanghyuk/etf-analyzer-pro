@@ -7,6 +7,7 @@ import pandas as pd
 import streamlit as st
 
 import data_sources
+from issue_page import render_issue_tab
 from wallstreet import (
     HISTORY_INDEXES,
     MARKET_DASHBOARD,
@@ -61,7 +62,7 @@ def _fetch_dashboard(today: date) -> pd.DataFrame:
 
 def render() -> None:
     st.subheader("🗽 월가이슈")
-    st.caption("시황 방송에서 다루는 숫자(지수·금리·달러·유가·금·코인·VIX, 섹터 등락, 역사적 비교)를 자동으로 모아 봅니다.")
+    st.caption("시황 방송에서 다루는 숫자(지수·금리·달러·유가·금·코인·VIX, 섹터 등락, 역사적 비교)를 자동으로 모으고, 영상 요약의 숫자를 검산합니다.")
 
     with st.sidebar:
         st.header("월가이슈 설정")
@@ -70,16 +71,24 @@ def render() -> None:
         if st.button("🔄 시세 새로고침", width="stretch", key="ws_refresh"):
             _closes.clear()
 
+    t1, t4, t2, t3 = st.tabs(["📋 시장 대시보드", "📝 영상 요약 검산", "🌡️ 섹터 히트맵", "📜 과거 비교"])
+    with t4:
+        render_issue_tab()
+
     today = date.today()
+    load_error = None
     with st.spinner("시세를 불러오는 중..."):
         try:
             closes = _fetch_dashboard(today)
         except Exception as e:  # 네트워크/야후 장애
-            st.error(f"시세를 불러오지 못했습니다: {e}")
-            st.stop()
-    if closes is None or closes.empty:
-        st.error("시세 데이터가 비어 있습니다. 잠시 후 새로고침해 주세요.")
-        st.stop()
+            closes, load_error = pd.DataFrame(), f"시세를 불러오지 못했습니다: {e}"
+    if load_error is None and (closes is None or closes.empty):
+        load_error = "시세 데이터가 비어 있습니다. 잠시 후 새로고침해 주세요."
+    if load_error:
+        for tab in (t1, t2, t3):
+            with tab:
+                st.error(load_error)
+        return
 
     snap = market_snapshot(closes, MARKET_DASHBOARD)
     sectors = market_snapshot(closes, [(l, t, "index") for l, t in SECTOR_ETFS])
@@ -94,8 +103,6 @@ def render() -> None:
             st.warning(f"{hist_name} 장기 데이터를 불러오지 못했습니다: {e}")
             long_s = pd.Series(dtype=float)
     rank = month_rank(long_s) if len(long_s) > 40 else {}
-
-    t1, t2, t3 = st.tabs(["📋 시장 대시보드", "🌡️ 섹터 히트맵", "📜 과거 비교"])
 
     with t1:
         lines = headline_lines(snap, rank, hist_name)

@@ -30,8 +30,13 @@
 - **오늘의 월가 3줄**: 쇼츠·메모에 바로 복사할 수 있는 요약
 - **섹터 히트맵**: XLK~XLRE 섹터 ETF와 SOXX·SOXL·QQQ·TLT·GLD 비교
 - **과거 비교**: 이번 달 수익률이 역대 몇 번째로 나쁜지, 마지막으로 이 정도였던 달은 언제인지, 해마다 같은 날짜까지의 연초 대비 수익률, 연속 하락 기록 (지수 또는 임의 티커)
+- **📝 영상 요약 검산**: 유튜브 시황 요약/대본을 붙여넣으면
+  1. 언급된 종목·지수를 자동 추출(한글 종목명, 티커, `회사명(TICKER)` 표기 인식)
+  2. 영상 속 숫자끼리 산수 검산 — 같은 날 종가 충돌, 전날 종가×등락률=종가, 공모가·시초가 대비, 고점 대비 하락률, 연초대비 산수
+  3. 실제 시세와 대조 — 1일·월간·연초대비·고점대비 등락률과 종가 (한국 날짜로 들어와도 직전 거래일을 함께 시도)
+  4. 내 ETF 노출도 — 보유 ETF와 금액을 적으면 영상 속 종목이 ETF에 몇 % 들어 있는지, 내 돈 기준 얼마나 노출됐는지 계산 (Yahoo 상위 구성종목 또는 운용사 CSV)
 
-계산 로직은 `wallstreet.py`, 화면은 `wallstreet_page.py`, 테스트는 `tests/test_wallstreet.py`(`python -m pytest tests`)에 있습니다.
+계산 로직은 `wallstreet.py`·`issue_parser.py`, 화면은 `wallstreet_page.py`·`issue_page.py`, 테스트는 `tests/`(`python -m pytest tests`)에 있습니다.
 
 ## Streamlit Cloud 배포
 
