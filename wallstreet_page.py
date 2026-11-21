@@ -34,13 +34,18 @@ def _closes(tickers: tuple[str, ...], start_iso: str, end_iso: str) -> pd.DataFr
 
 
 def _color(v):
-    if v is None or pd.isna(v):
+    if not isinstance(v, (int, float)) or pd.isna(v):
         return ""
     if v > 0:
         return "color: #d62728"  # 한국식: 상승 빨강
     if v < 0:
         return "color: #1f62c9"  # 하락 파랑
     return ""
+
+
+def _fmt(pattern: str):
+    """숫자는 pattern으로, 빈 값은 '-'로. (st.dataframe은 결측 칸에 na_rep 대신 'None'을 그린다)"""
+    return lambda v: "-" if not isinstance(v, (int, float)) or pd.isna(v) else pattern.format(v)
 
 
 def _style_snapshot(df: pd.DataFrame):
@@ -53,7 +58,12 @@ def _style_snapshot(df: pd.DataFrame):
     }
     for c in chg:
         fmt[c] = "{:+.2f}"
-    return df.style.format(fmt, na_rep="-").map(_color, subset=chg + ["52주고점대비(%)", "연속(일)"])
+    view = df.copy()
+    for c in fmt:
+        if c in view.columns:
+            view[c] = view[c].astype(object).where(view[c].notna(), "-")
+    return view.style.format({c: _fmt(f) for c, f in fmt.items() if c in view.columns}).map(
+        _color, subset=[c for c in chg + ["52주고점대비(%)", "연속(일)"] if c in view.columns])
 
 
 def _fetch_dashboard(today: date) -> pd.DataFrame:
