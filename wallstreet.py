@@ -19,7 +19,8 @@ MARKET_DASHBOARD: list[tuple[str, str, str]] = [
     ("필라델피아 반도체", "^SOX", "index"),
     ("VIX 공포지수", "^VIX", "vol"),
     ("미국채 10년 금리", "^TNX", "rate"),
-    ("미국채 2년 금리", "2YY=F", "rate"),
+    ("미국채 3개월 금리", "^IRX", "rate"),
+    ("미국채 5년 금리", "^FVX", "rate"),
     ("달러 인덱스", "DX-Y.NYB", "fx"),
     ("원/달러 환율", "KRW=X", "fx"),
     ("WTI 유가", "CL=F", "commodity"),
@@ -142,7 +143,7 @@ def snapshot_row(label: str, ticker: str, kind: str, s: pd.Series) -> dict | Non
     high_date = window.idxmax()
 
     change = _bp if kind == "rate" else _pct
-    dd = None if kind in ("rate", "vol") else _pct(last, high)
+    dd = None if kind in ("rate", "vol", "fx") else _pct(last, high)  # 금리·VIX·환율의 '고점 대비'는 손실이 아님
     recovery = None
     if dd is not None and dd < 0:
         recovery = (1.0 / (1.0 + dd / 100.0) - 1.0) * 100.0

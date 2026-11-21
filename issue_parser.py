@@ -45,10 +45,11 @@ ENTITY_DEFS: list[EntityDef] = [
     EntityDef("GC=F", "금", "macro", (r"금값", r"금\s?가격", r"(?<![가-힣])금(?=과|은|이|도|값|\s?선물)")),
     # 개별 종목
     EntityDef("NVDA", "엔비디아", "stock", (r"엔비디아", _t("NVDA"), _t("NVIDIA")), ("NVIDIA",)),
-    EntityDef("ANTH", "앤트로픽", "stock", (r"앤트로픽", _t("ANTH"), _t("Anthropic")), ("Anthropic",)),
+    EntityDef("ANT", "앤트로픽", "stock", (r"앤트로픽", _t("ANT"), _t("Anthropic")), ("Anthropic",)),
     EntityDef("MU", "마이크론", "stock", (r"마이크론", _t("MU")), ("Micron",)),
     EntityDef("INTC", "인텔", "stock", (r"인텔", _t("INTC")), ("Intel",)),
     EntityDef("AMD", "AMD", "stock", (_t("AMD"),), ("Advanced Micro Devices", "AMD")),
+    EntityDef("SKHY", "SK하이닉스 ADR", "stock", (r"SK\s?하이닉스\s?ADR", _t("SKHY")), ("SK hynix Inc ADR", "SKHY")),
     EntityDef("000660.KS", "SK하이닉스", "stock", (r"SK\s?하이닉스", _t("SK hynix")), ("SK hynix", "SK하이닉스", "SK Hynix")),
     EntityDef("005930.KS", "삼성전자", "stock", (r"삼성전자",), ("Samsung Electronics", "삼성전자")),
     EntityDef("TSM", "TSMC", "stock", (_t("TSMC"), _t("TSM")), ("Taiwan Semiconductor", "TSMC")),
@@ -102,10 +103,13 @@ def find_mentions(text: str) -> list[Mention]:
             for m in re.finditer(pat, text):
                 found.append(Mention(d.ticker, m.start(), m.end(), m.group(0)))
     # 괄호 속 미등록 티커: 예) 코어위브(CRWV), 서클(CRCL)
+    named_ends = {f.end for f in found}
     for m in re.finditer(r"\(([A-Z]{1,5}(?:\.[A-Z]{1,2})?)\)", text):
         sym = m.group(1)
         if sym in ACRONYM_STOP or sym in _BY_TICKER or any(sym == d.ticker.lstrip("^") for d in ENTITY_DEFS):
             continue
+        if m.start() in named_ends or m.start() - 1 in named_ends:
+            continue  # '앤트로픽(ANTH)': 종목은 이름으로 인식, 표기 검사는 ticker_label_issues에서
         found.append(Mention(sym, m.start(1), m.end(1), sym))
     found.sort(key=lambda x: (x.start, -(x.end - x.start)))
     out: list[Mention] = []
@@ -115,6 +119,38 @@ def find_mentions(text: str) -> list[Mention]:
             out.append(f)
             last_end = f.end
     return out
+
+
+_TICKER_ALIASES = {"NDX": "^NDX", "IXIC": "^IXIC", "SPX": "^GSPC", "GSPC": "^GSPC", "DJI": "^DJI", "VIX": "^VIX",
+                   "SOX": "^SOX", "RUT": "^RUT", "TNX": "^TNX"}
+
+
+def ticker_label_issues(text: str) -> pd.DataFrame:
+    """'회사명(TICKER)' 표기에서 괄호 속 티커가 실제 티커와 다른 경우."""
+    rows = []
+    mentions = find_mentions(text)
+    by_end = {}
+    for mt in mentions:
+        by_end.setdefault(mt.end, mt)
+    seen = set()
+    for m in re.finditer(r"\s?\(([A-Z0-9^.=\-]{1,10})\)", text):
+        mt = by_end.get(m.start())
+        if not mt:
+            continue
+        stated = m.group(1)
+        e = entity_info(mt.ticker)
+        actual = e.ticker
+        stated_norm = _TICKER_ALIASES.get(stated, stated)
+        if stated_norm.upper() == actual.upper() or (mt.ticker, stated) in seen:
+            continue
+        seen.add((mt.ticker, stated))
+        other = _BY_TICKER.get(stated_norm)
+        if other:
+            note = f"{stated}는 '{other.name}'의 티커입니다. '{mt.text}' 표기가 보통 가리키는 것: {e.name}({actual})"
+        else:
+            note = f"Yahoo Finance 기준 {e.name}의 티커는 {actual}입니다. {stated}는 다른 종목이거나 없는 티커일 수 있습니다."
+        rows.append({"표기": f"{mt.text}({stated})", "실제 티커": actual, "설명": note})
+    return pd.DataFrame(rows, columns=["표기", "실제 티커", "설명"])
 
 
 def entity_info(ticker: str) -> EntityDef:
@@ -246,31 +282,61 @@ def _period(sentence: str, pos: int, ref_year: int, ref_month: int) -> tuple[str
     return label, None
 
 
-def extract_claims(text: str, ref_date: date) -> tuple[list[Mention], list[Claim]]:
+@dataclass
+class SentenceCtx:
+    index: int
+    text: str
+    mentions: list[Mention]       # 문장 안 위치 기준
+    context_ticker: str | None    # 종목 언급이 없을 때 이어받은 주어
+    section_ticker: str | None = None  # 소제목/제목의 종목
+    context_stock: str | None = None   # 2문장 이내에 나온 마지막 개별 종목(지수·ETF 제외)
+
+
+def sentence_contexts(text: str) -> tuple[list[Mention], list[SentenceCtx]]:
+    """문장마다 언급 종목과, 주어가 생략된 경우 이어받을 종목을 정한다.
+
+    같은 문단의 2문장 이내 주어 → 굵은 소제목의 종목 → '#' 제목의 종목 순으로 이어받는다.
+    """
     mentions = find_mentions(text)
-    claims: list[Claim] = []
-    recent: list[tuple[int, str]] = []  # (문장 번호, 주어) — 같은 문단에서 2문장 이내만 이어받음
-    h_section: str | None = None        # '#' 제목에 나온 종목
-    section: str | None = None          # 굵은 소제목에 나온 종목(없으면 '#' 제목 것)
+    out: list[SentenceCtx] = []
+    recent: list[tuple[int, str]] = []
+    recent_stock: list[tuple[int, str]] = []
+    h_section: str | None = None
+    section: str | None = None
     prev_end = 0
     for si, (a, b) in enumerate(split_sentences(text)):
         sent = text[a:b]
         ms = [Mention(m.ticker, m.start - a, m.end - a, m.text) for m in mentions if a <= m.start < b]
         if re.search(r"\n\s*\n", text[prev_end:a]):
-            recent = []
+            recent, recent_stock = [], []
         prev_end = b
         body = re.sub(r"^\s*(?:\d+\.\s*)?", "", sent)
         if sent.lstrip().startswith("#"):
             h_section = section = ms[0].ticker if ms else None
-            recent = []
+            recent, recent_stock = [], []
         elif body.startswith("**"):
             section = ms[0].ticker if ms else h_section
-            recent = []
-        carried_from = None
+            recent, recent_stock = [], []
+        ctx = None
         if not ms:
             near = [t for i, t in recent if si - i <= 2]
-            tk_ctx = near[-1] if near else section
-            carried_from = Mention(tk_ctx, 0, 0, "") if tk_ctx else None
+            ctx = near[-1] if near else section
+        near_stock = [t for i, t in recent_stock if si - i <= 2]
+        out.append(SentenceCtx(si, sent, ms, ctx, section, near_stock[-1] if near_stock else None))
+        if ms:
+            recent = (recent + [(si, ms[-1].ticker)])[-2:]
+            stocks = [m.ticker for m in ms if entity_info(m.ticker).kind in ("stock", "unknown")]
+            if stocks:
+                recent_stock = (recent_stock + [(si, stocks[-1])])[-2:]
+    return mentions, out
+
+
+def extract_claims(text: str, ref_date: date) -> tuple[list[Mention], list[Claim]]:
+    mentions, contexts = sentence_contexts(text)
+    claims: list[Claim] = []
+    for sc in contexts:
+        si, sent, ms = sc.index, sc.text, sc.mentions
+        carried_from = Mention(sc.context_ticker, 0, 0, "") if sc.context_ticker else None
 
         def owner(pos: int) -> tuple[str | None, bool]:
             m = _nearest_before(ms, pos)
@@ -353,8 +419,6 @@ def extract_claims(text: str, ref_date: date) -> tuple[list[Mention], list[Claim
             if lm and "%" not in sent[mt.end: mt.end + lm.end()]:
                 claims.append(Claim(mt.ticker, "level", _num(lm.group(1)), True, False, _decimals(lm.group(1)),
                                     "close", si, sent.strip()[:160]))
-        if ms:
-            recent = (recent + [(si, ms[-1].ticker)])[-2:]
     return mentions, claims
 
 
@@ -609,15 +673,19 @@ def verify_against_prices(claims: list[Claim], closes: pd.DataFrame, d: date) ->
         if actual is None:
             verdict, shown = "❓ 데이터 없음", "-"
         else:
+            near = False
             if c.kind == "pct":
                 ok = _cmp(c, actual)
                 if c.period == "high" and not ok:  # 고점은 장중 고가 기준일 수 있음
                     ok = abs(abs(c.value) - abs(actual)) <= max(_tol(c), 3.0)
+                diff = abs(c.value - actual) if c.sign_known else abs(abs(c.value) - abs(actual))
+                near = not ok and diff <= max(0.5, abs(actual) * 0.05)
                 shown = f"{actual:+.2f}%"
             else:
-                ok = _same(c.value, actual, 0.005)
+                ok = _same(c.value, actual, 0.002)
+                near = not ok and _same(c.value, actual, 0.005)
                 shown = f"{actual:,.2f}"
-            verdict = "✅ 일치" if ok else "⚠️ 불일치"
+            verdict = "✅ 일치" if ok else ("🟡 근사" if near else "⚠️ 불일치")
         rows.append({"종목": entity_info(c.ticker).name, "티커": c.ticker, "영상 주장": _fmt_claim(c), "실제": shown,
                      "기준일": used, "판정": verdict, "문장": c.snippet + (" (앞 문장 주어로 추정)" if c.carried else "")})
     return pd.DataFrame(rows, columns=["종목", "티커", "영상 주장", "실제", "기준일", "판정", "문장"])

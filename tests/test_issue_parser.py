@@ -81,7 +81,7 @@ def test_context_carry_stops_at_new_section():
     )
     cs = claims_of(text)
     assert not [c for c in cs if c.ticker == "NVDA" and c.month == (2022, 11)]
-    assert [c for c in cs if c.ticker == "ANTH" and c.kind == "price" and c.period == "prev_close" and c.value == 97.17]
+    assert [c for c in cs if c.ticker == "ANT" and c.kind == "price" and c.period == "prev_close" and c.value == 97.17]
 
 
 def _closes():
@@ -117,7 +117,7 @@ def test_exposure_by_symbol_and_name():
         "weight": [9.0, 8.0, 2.0, 5.0, 8.5, 20.0],
         "symbol": ["NVDA", "AAPL", "AMD", None, None, None],
     })
-    mat, money = exposure(holdings, ["NVDA", "AMD", "MU", "ANTH"], {"QQQ": 1000, "SOXX": 500, "KR1": 0})
+    mat, money = exposure(holdings, ["NVDA", "AMD", "MU", "ANT"], {"QQQ": 1000, "SOXX": 500, "KR1": 0})
     assert mat.loc["QQQ", "엔비디아"] == 9.0
     assert mat.loc["SOXX", "마이크론"] == 5.0
     assert mat.loc["KR1", "엔비디아"] == 20.0
@@ -130,5 +130,24 @@ def test_exposure_by_symbol_and_name():
 def test_mention_table_lists_claims():
     ms, cs = extract_claims(SAMPLE, D)
     t = mention_table(ms, cs).set_index("티커")
-    assert "종가 $88.3" in t.loc["ANTH", "영상 속 숫자"]
+    assert "종가 $88.3" in t.loc["ANT", "영상 속 숫자"]
     assert t.loc["SOXL", "종류"] == "ETF"
+
+
+def test_ticker_label_issues_and_adr():
+    from issue_parser import ticker_label_issues
+    t = ticker_label_issues("| 나스닥(NDX) | 엔비디아(NVDA) | 앤트로픽(ANTH) | 코어위브(CRWV) |")
+    got = dict(zip(t["표기"], t["실제 티커"]))
+    assert got == {"나스닥(NDX)": "^IXIC", "앤트로픽(ANTH)": "ANT"}
+    ms = find_mentions("SK하이닉스 ADR은 13.11%, SK하이닉스는 5.92% 내렸다. 앤트로픽(ANTH)")
+    assert [m.ticker for m in ms] == ["SKHY", "000660.KS", "ANT"]  # 'ANTH'를 별도 종목으로 만들지 않음
+
+
+def test_price_verdict_thresholds():
+    idx = pd.bdate_range("2026-11-17", "2026-11-20")
+    closes = pd.DataFrame({"ANT": [None, None, 97.17, 88.91]}, index=idx)
+    _, cs = extract_claims("앤트로픽 주가는 88.3달러로 마감했다. 앤트로픽은 이날 88.91달러로 마감했다.", D)
+    vt, _, _ = best_verification(cs, closes, D)
+    got = dict(zip(vt["영상 주장"], vt["판정"]))
+    assert got["종가 $88.91"] == "✅ 일치"
+    assert got["종가 $88.3"] == "⚠️ 불일치"
