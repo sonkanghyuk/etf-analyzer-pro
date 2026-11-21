@@ -143,7 +143,7 @@ def snapshot_row(label: str, ticker: str, kind: str, s: pd.Series) -> dict | Non
     high_date = window.idxmax()
 
     change = _bp if kind == "rate" else _pct
-    dd = None if kind in ("rate", "vol") else _pct(last, high)
+    dd = None if kind in ("rate", "vol", "fx") else _pct(last, high)  # 금리·VIX·환율의 '고점 대비'는 손실이 아님
     recovery = None
     if dd is not None and dd < 0:
         recovery = (1.0 / (1.0 + dd / 100.0) - 1.0) * 100.0

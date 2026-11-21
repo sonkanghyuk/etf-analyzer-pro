@@ -490,7 +490,7 @@ if mode == "① 티커 자동분석":
                 any_sector = True
                 st.markdown(f"### {kr_name_map.get(t, display_ticker(t))} · Yahoo Fund Data")
                 st.bar_chart(sec, horizontal=True)
-                st.dataframe(sec.rename("비중(%)").reset_index(names="섹터"), use_container_width=True, hide_index=True)
+                st.dataframe(sec.rename_axis("섹터").rename("비중(%)").reset_index(), use_container_width=True, hide_index=True)
         if not any_sector:
             st.info("섹터 데이터를 가져오지 못했습니다. sector/섹터 열이 포함된 구성종목 CSV를 업로드하세요.")
 
