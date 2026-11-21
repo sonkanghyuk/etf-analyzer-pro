@@ -123,7 +123,7 @@ def render() -> None:
                     delta_color="off",  # 미국식 초록/빨강 대신 화살표로만 표시
                 )
         st.markdown("#### 전체 지표")
-        st.caption("금리(10년·2년)의 변화는 bp(0.01%p) 단위입니다. 연속(일): +는 연속 상승, -는 연속 하락 거래일 수.")
+        st.caption("금리(3개월·5년·10년)의 변화는 bp(0.01%p) 단위입니다. 연속(일): +는 연속 상승, -는 연속 하락 거래일 수.")
         view = snap.assign(종류=snap["종류"].map(KIND_LABEL)).drop(columns=["52주고점일"])
         st.dataframe(_style_snapshot(view), width="stretch", hide_index=True)
 

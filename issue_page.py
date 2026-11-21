@@ -16,6 +16,7 @@ from issue_parser import (
     mention_table,
     parse_ref_date,
     price_window,
+    ticker_label_issues,
 )
 
 SAMPLE = """# 월가 마감 시황 · 2026.11.20
@@ -93,6 +94,10 @@ def render_issue_tab() -> None:
     mt = mention_table(mentions, claims)
     st.dataframe(mt, width="stretch", hide_index=True)
     st.caption("사전에 없는 종목은 '회사명(TICKER)'처럼 괄호로 티커를 적으면 인식합니다. 주어가 생략된 문장은 앞 문장·소제목의 종목으로 추정합니다.")
+    labels = ticker_label_issues(text)
+    if not labels.empty:
+        st.warning("요약문에 적힌 티커가 실제와 다릅니다. 이 티커로 매매·검색하면 다른 종목이 나올 수 있습니다.")
+        st.dataframe(labels, width="stretch", hide_index=True)
 
     # ② 내부 검산
     st.markdown("##### 🧮 ② 영상 속 숫자끼리 검산")

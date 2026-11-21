@@ -45,10 +45,11 @@ ENTITY_DEFS: list[EntityDef] = [
     EntityDef("GC=F", "금", "macro", (r"금값", r"금\s?가격", r"(?<![가-힣])금(?=과|은|이|도|값|\s?선물)")),
     # 개별 종목
     EntityDef("NVDA", "엔비디아", "stock", (r"엔비디아", _t("NVDA"), _t("NVIDIA")), ("NVIDIA",)),
-    EntityDef("ANTH", "앤트로픽", "stock", (r"앤트로픽", _t("ANTH"), _t("Anthropic")), ("Anthropic",)),
+    EntityDef("ANT", "앤트로픽", "stock", (r"앤트로픽", _t("ANT"), _t("Anthropic")), ("Anthropic",)),
     EntityDef("MU", "마이크론", "stock", (r"마이크론", _t("MU")), ("Micron",)),
     EntityDef("INTC", "인텔", "stock", (r"인텔", _t("INTC")), ("Intel",)),
     EntityDef("AMD", "AMD", "stock", (_t("AMD"),), ("Advanced Micro Devices", "AMD")),
+    EntityDef("SKHY", "SK하이닉스 ADR", "stock", (r"SK\s?하이닉스\s?ADR", _t("SKHY")), ("SK hynix Inc ADR", "SKHY")),
     EntityDef("000660.KS", "SK하이닉스", "stock", (r"SK\s?하이닉스", _t("SK hynix")), ("SK hynix", "SK하이닉스", "SK Hynix")),
     EntityDef("005930.KS", "삼성전자", "stock", (r"삼성전자",), ("Samsung Electronics", "삼성전자")),
     EntityDef("TSM", "TSMC", "stock", (_t("TSMC"), _t("TSM")), ("Taiwan Semiconductor", "TSMC")),
@@ -102,10 +103,13 @@ def find_mentions(text: str) -> list[Mention]:
             for m in re.finditer(pat, text):
                 found.append(Mention(d.ticker, m.start(), m.end(), m.group(0)))
     # 괄호 속 미등록 티커: 예) 코어위브(CRWV), 서클(CRCL)
+    named_ends = {f.end for f in found}
     for m in re.finditer(r"\(([A-Z]{1,5}(?:\.[A-Z]{1,2})?)\)", text):
         sym = m.group(1)
         if sym in ACRONYM_STOP or sym in _BY_TICKER or any(sym == d.ticker.lstrip("^") for d in ENTITY_DEFS):
             continue
+        if m.start() in named_ends or m.start() - 1 in named_ends:
+            continue  # '앤트로픽(ANTH)': 종목은 이름으로 인식, 표기 검사는 ticker_label_issues에서
         found.append(Mention(sym, m.start(1), m.end(1), sym))
     found.sort(key=lambda x: (x.start, -(x.end - x.start)))
     out: list[Mention] = []
@@ -115,6 +119,38 @@ def find_mentions(text: str) -> list[Mention]:
             out.append(f)
             last_end = f.end
     return out
+
+
+_TICKER_ALIASES = {"NDX": "^NDX", "IXIC": "^IXIC", "SPX": "^GSPC", "GSPC": "^GSPC", "DJI": "^DJI", "VIX": "^VIX",
+                   "SOX": "^SOX", "RUT": "^RUT", "TNX": "^TNX"}
+
+
+def ticker_label_issues(text: str) -> pd.DataFrame:
+    """'회사명(TICKER)' 표기에서 괄호 속 티커가 실제 티커와 다른 경우."""
+    rows = []
+    mentions = find_mentions(text)
+    by_end = {}
+    for mt in mentions:
+        by_end.setdefault(mt.end, mt)
+    seen = set()
+    for m in re.finditer(r"\s?\(([A-Z0-9^.=\-]{1,10})\)", text):
+        mt = by_end.get(m.start())
+        if not mt:
+            continue
+        stated = m.group(1)
+        e = entity_info(mt.ticker)
+        actual = e.ticker
+        stated_norm = _TICKER_ALIASES.get(stated, stated)
+        if stated_norm.upper() == actual.upper() or (mt.ticker, stated) in seen:
+            continue
+        seen.add((mt.ticker, stated))
+        other = _BY_TICKER.get(stated_norm)
+        if other:
+            note = f"{stated}는 '{other.name}'의 티커입니다. '{mt.text}' 표기가 보통 가리키는 것: {e.name}({actual})"
+        else:
+            note = f"Yahoo Finance 기준 {e.name}의 티커는 {actual}입니다. {stated}는 다른 종목이거나 없는 티커일 수 있습니다."
+        rows.append({"표기": f"{mt.text}({stated})", "실제 티커": actual, "설명": note})
+    return pd.DataFrame(rows, columns=["표기", "실제 티커", "설명"])
 
 
 def entity_info(ticker: str) -> EntityDef:
@@ -609,15 +645,19 @@ def verify_against_prices(claims: list[Claim], closes: pd.DataFrame, d: date) ->
         if actual is None:
             verdict, shown = "❓ 데이터 없음", "-"
         else:
+            near = False
             if c.kind == "pct":
                 ok = _cmp(c, actual)
                 if c.period == "high" and not ok:  # 고점은 장중 고가 기준일 수 있음
                     ok = abs(abs(c.value) - abs(actual)) <= max(_tol(c), 3.0)
+                diff = abs(c.value - actual) if c.sign_known else abs(abs(c.value) - abs(actual))
+                near = not ok and diff <= max(0.5, abs(actual) * 0.05)
                 shown = f"{actual:+.2f}%"
             else:
-                ok = _same(c.value, actual, 0.005)
+                ok = _same(c.value, actual, 0.002)
+                near = not ok and _same(c.value, actual, 0.005)
                 shown = f"{actual:,.2f}"
-            verdict = "✅ 일치" if ok else "⚠️ 불일치"
+            verdict = "✅ 일치" if ok else ("🟡 근사" if near else "⚠️ 불일치")
         rows.append({"종목": entity_info(c.ticker).name, "티커": c.ticker, "영상 주장": _fmt_claim(c), "실제": shown,
                      "기준일": used, "판정": verdict, "문장": c.snippet + (" (앞 문장 주어로 추정)" if c.carried else "")})
     return pd.DataFrame(rows, columns=["종목", "티커", "영상 주장", "실제", "기준일", "판정", "문장"])

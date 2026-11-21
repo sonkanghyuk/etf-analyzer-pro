@@ -155,6 +155,9 @@ def download_prices(tickers: list[str], start, end) -> tuple[pd.DataFrame, pd.Da
         if yahoo_symbol in c.columns:
             closes[original] = c[yahoo_symbol]
 
+    # Yahoo가 상장 전·정지 구간을 0으로 주는 경우가 있어 결측으로 바꾼다
+    prices = prices.mask(prices <= 0)
+    closes = closes.mask(closes <= 0)
     return prices.dropna(how="all"), closes.dropna(how="all")
 
 
