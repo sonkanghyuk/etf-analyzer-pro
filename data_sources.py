@@ -308,6 +308,8 @@ def fetch_fund_snapshot(ticker: str) -> dict:
                             "holding": tmp[name_col].astype(str),
                             "weight": pd.to_numeric(tmp[weight_col], errors="coerce"),
                         })
+                        if symbol_col is not None and symbol_col != name_col:
+                            h["symbol"] = tmp[symbol_col].astype(str).str.upper()
                         valid = h["weight"].dropna()
                         if not valid.empty and valid.max() <= 1:
                             h["weight"] *= 100

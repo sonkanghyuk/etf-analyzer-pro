@@ -222,8 +222,14 @@ def precision_overlap_matrix(df: pd.DataFrame, etfs: list[str]) -> pd.DataFrame:
 st.title("📊 ETF Analyzer Pro")
 st.caption("티커 자동분석 + 운용사 CSV 정밀분석을 한 곳에서 사용할 수 있습니다.")
 
-mode = st.sidebar.radio("분석 모드", ["① 티커 자동분석", "② CSV 정밀분석"], index=0)
-st.sidebar.caption("자동분석: 미국·국내 ETF 성과 비교 · CSV 정밀분석: 구성종목 중복도/집중도 분석")
+mode = st.sidebar.radio("분석 모드", ["① 티커 자동분석", "② CSV 정밀분석", "③ 월가이슈"], index=0)
+st.sidebar.caption("자동분석: 미국·국내 ETF 성과 비교 · CSV 정밀분석: 구성종목 중복도/집중도 분석 · 월가이슈: 시장 대시보드·과거 비교")
+
+if mode == "③ 월가이슈":
+    from wallstreet_page import render as render_wallstreet
+
+    render_wallstreet()
+    st.stop()
 
 if mode == "① 티커 자동분석":
     master = get_korean_etf_master()
