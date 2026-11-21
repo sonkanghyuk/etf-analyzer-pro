@@ -90,3 +90,11 @@ def test_ytd_same_day_and_headline():
     assert len(snap) == 3
     lines = headline_lines(snap, month_rank(s), "S&P 500")
     assert len(lines) == 3 and "S&P 500" in lines[0]
+
+
+def test_snapshot_numeric_columns_are_float():
+    idx = pd.bdate_range("2025-12-01", "2026-11-20")
+    closes = pd.DataFrame({"^GSPC": np.linspace(100, 110, len(idx)), "^TNX": np.linspace(4, 5, len(idx))}, index=idx)
+    snap = market_snapshot(closes, [("S&P 500", "^GSPC", "index"), ("10년", "^TNX", "rate")])
+    assert snap["52주고점대비(%)"].dtype.kind == "f"  # 금리 행의 None → NaN
+    assert snap["52주고점대비(%)"].isna().sum() == 1

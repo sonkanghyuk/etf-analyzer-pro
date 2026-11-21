@@ -172,7 +172,12 @@ def market_snapshot(closes: pd.DataFrame, assets: list[tuple[str, str, str]]) ->
         row = snapshot_row(label, ticker, kind, closes[ticker])
         if row:
             rows.append(row)
-    return pd.DataFrame(rows)
+    df = pd.DataFrame(rows)
+    # None이 섞인 숫자 열은 object가 되어 표에 'None'으로 찍히므로 실수형으로 맞춘다
+    for col in ("1일", "1주", "월초대비", "연초대비", "52주고점대비(%)", "회복필요상승률(%)"):
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+    return df
 
 
 def monthly_history(s: pd.Series) -> pd.DataFrame:
