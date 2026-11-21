@@ -282,31 +282,61 @@ def _period(sentence: str, pos: int, ref_year: int, ref_month: int) -> tuple[str
     return label, None
 
 
-def extract_claims(text: str, ref_date: date) -> tuple[list[Mention], list[Claim]]:
+@dataclass
+class SentenceCtx:
+    index: int
+    text: str
+    mentions: list[Mention]       # 문장 안 위치 기준
+    context_ticker: str | None    # 종목 언급이 없을 때 이어받은 주어
+    section_ticker: str | None = None  # 소제목/제목의 종목
+    context_stock: str | None = None   # 2문장 이내에 나온 마지막 개별 종목(지수·ETF 제외)
+
+
+def sentence_contexts(text: str) -> tuple[list[Mention], list[SentenceCtx]]:
+    """문장마다 언급 종목과, 주어가 생략된 경우 이어받을 종목을 정한다.
+
+    같은 문단의 2문장 이내 주어 → 굵은 소제목의 종목 → '#' 제목의 종목 순으로 이어받는다.
+    """
     mentions = find_mentions(text)
-    claims: list[Claim] = []
-    recent: list[tuple[int, str]] = []  # (문장 번호, 주어) — 같은 문단에서 2문장 이내만 이어받음
-    h_section: str | None = None        # '#' 제목에 나온 종목
-    section: str | None = None          # 굵은 소제목에 나온 종목(없으면 '#' 제목 것)
+    out: list[SentenceCtx] = []
+    recent: list[tuple[int, str]] = []
+    recent_stock: list[tuple[int, str]] = []
+    h_section: str | None = None
+    section: str | None = None
     prev_end = 0
     for si, (a, b) in enumerate(split_sentences(text)):
         sent = text[a:b]
         ms = [Mention(m.ticker, m.start - a, m.end - a, m.text) for m in mentions if a <= m.start < b]
         if re.search(r"\n\s*\n", text[prev_end:a]):
-            recent = []
+            recent, recent_stock = [], []
         prev_end = b
         body = re.sub(r"^\s*(?:\d+\.\s*)?", "", sent)
         if sent.lstrip().startswith("#"):
             h_section = section = ms[0].ticker if ms else None
-            recent = []
+            recent, recent_stock = [], []
         elif body.startswith("**"):
             section = ms[0].ticker if ms else h_section
-            recent = []
-        carried_from = None
+            recent, recent_stock = [], []
+        ctx = None
         if not ms:
             near = [t for i, t in recent if si - i <= 2]
-            tk_ctx = near[-1] if near else section
-            carried_from = Mention(tk_ctx, 0, 0, "") if tk_ctx else None
+            ctx = near[-1] if near else section
+        near_stock = [t for i, t in recent_stock if si - i <= 2]
+        out.append(SentenceCtx(si, sent, ms, ctx, section, near_stock[-1] if near_stock else None))
+        if ms:
+            recent = (recent + [(si, ms[-1].ticker)])[-2:]
+            stocks = [m.ticker for m in ms if entity_info(m.ticker).kind in ("stock", "unknown")]
+            if stocks:
+                recent_stock = (recent_stock + [(si, stocks[-1])])[-2:]
+    return mentions, out
+
+
+def extract_claims(text: str, ref_date: date) -> tuple[list[Mention], list[Claim]]:
+    mentions, contexts = sentence_contexts(text)
+    claims: list[Claim] = []
+    for sc in contexts:
+        si, sent, ms = sc.index, sc.text, sc.mentions
+        carried_from = Mention(sc.context_ticker, 0, 0, "") if sc.context_ticker else None
 
         def owner(pos: int) -> tuple[str | None, bool]:
             m = _nearest_before(ms, pos)
@@ -389,8 +419,6 @@ def extract_claims(text: str, ref_date: date) -> tuple[list[Mention], list[Claim
             if lm and "%" not in sent[mt.end: mt.end + lm.end()]:
                 claims.append(Claim(mt.ticker, "level", _num(lm.group(1)), True, False, _decimals(lm.group(1)),
                                     "close", si, sent.strip()[:160]))
-        if ms:
-            recent = (recent + [(si, ms[-1].ticker)])[-2:]
     return mentions, claims
 
 

@@ -7,6 +7,7 @@ import pandas as pd
 import streamlit as st
 
 import data_sources
+from events import extract_events
 from issue_parser import (
     best_verification,
     entity_info,
@@ -27,6 +28,7 @@ SAMPLE = """# 월가 마감 시황 · 2026.11.20
    전날 종가 97.17달러는 공모가보다 약 17% 높은 수준이었다.
    앤트로픽은 이날 88.91달러로 마감했다. 공모가 83달러보다는 약 7% 높지만, 시초가 111.5달러보다 약 20% 낮다.
 5. SOXL은 10월 6일 300.77달러까지 올랐지만, 방송 당일 30.88달러까지 떨어졌다. 고점 대비 약 90% 하락했다.
+6. 앤트로픽은 12월 21일 나스닥 100에 조기 편입될 예정이다. 내년 2월까지 16억 주가 나올 수 있다.
 """
 
 
@@ -74,6 +76,7 @@ def render_issue_tab() -> None:
         placeholder="여기에 영상 요약을 붙여넣으세요. 예) 엔비디아는 13.8% 하락했다. 앤트로픽 주가는 9.13% 하락해 88.3달러로 마감했다...",
     )
     if not text.strip():
+        st.session_state["ws_video_events"] = None
         st.info("요약문을 붙여넣거나 '예시 불러오기'를 눌러 보세요.")
         return
 
@@ -143,6 +146,23 @@ def render_issue_tab() -> None:
                 "종가 기준으로 대조합니다. '고점 대비'는 장중 고가 기준일 수 있어 오차를 넉넉히 봅니다. "
                 "'약', '넘게', '10~20%' 같은 표현은 범위가 넓거나 대조에서 제외됩니다."
             )
+
+    # ⑤ 영상 속 일정: ④가 중간에 끝날 수 있어 자리를 먼저 잡고 아래에 그린다
+    events = extract_events(text, d)
+    st.session_state["ws_video_events"] = events
+    exposure_box = st.container()
+    st.markdown("##### 📅 ⑤ 영상 속 일정")
+    if events.empty:
+        st.info("영상 속에서 앞으로의 날짜가 붙은 일정(편입, 발표, 보호예수 해제 등)을 찾지 못했습니다.")
+    else:
+        st.dataframe(events[["표기", "이벤트", "관련", "문장"]].rename(columns={"표기": "날짜", "문장": "근거 문장"}),
+                     width="stretch", hide_index=True)
+        st.caption("이 일정은 '📅 일정' 탭에 시장 일정과 함께 D-day로 표시됩니다.")
+    with exposure_box:
+        _render_exposure(mentions, d)
+
+
+def _render_exposure(mentions, d) -> None:
 
     # ④ 내 ETF 노출도
     st.markdown("##### 💼 ④ 내 ETF 노출도")

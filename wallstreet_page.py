@@ -7,6 +7,9 @@ import pandas as pd
 import streamlit as st
 
 import data_sources
+from calendar_page import render_calendar_tab
+from events import combine, market_calendar
+from shorts_card import make_card
 from issue_page import render_issue_tab
 from wallstreet import (
     HISTORY_INDEXES,
@@ -71,9 +74,11 @@ def render() -> None:
         if st.button("🔄 시세 새로고침", width="stretch", key="ws_refresh"):
             _closes.clear()
 
-    t1, t4, t2, t3 = st.tabs(["📋 시장 대시보드", "📝 영상 요약 검산", "🌡️ 섹터 히트맵", "📜 과거 비교"])
+    t1, t4, t5, t2, t3 = st.tabs(["📋 시장 대시보드", "📝 영상 요약 검산", "📅 일정", "🌡️ 섹터 히트맵", "📜 과거 비교"])
     with t4:
         render_issue_tab()
+    with t5:
+        render_calendar_tab()
 
     today = date.today()
     load_error = None
@@ -151,6 +156,26 @@ def render() -> None:
         if rec:
             st.markdown("#### 연속 상승·하락 기록")
             st.markdown("\n".join(rec))
+
+        st.markdown("#### 🎬 쇼츠 카드")
+        if st.toggle("세로 카드(1080×1920) 만들기", key="ws_card"):
+            rank_line = None
+            if rank:
+                word = "최악" if rank["return"] < 0 else "최고"
+                since = f"{rank['since_month']} 이후 {word}" if rank.get("since_month") else f"데이터 시작 이후 {word}"
+                rank_line = f"{hist_name} 이번 달 {rank['return']:+.1f}% · {since}"
+            video_ev = st.session_state.get("ws_video_events")
+            upcoming = combine([video_ev if isinstance(video_ev, pd.DataFrame) else None,
+                                market_calendar(today, today + timedelta(days=45))], today)
+            upcoming = upcoming[upcoming["날짜"] >= today]
+            png = make_card(snap, sectors, rank_line, upcoming)
+            c1, c2 = st.columns([1, 2])
+            c1.image(png, width=260)
+            with c2:
+                st.download_button("📥 PNG 내려받기", png, f"wallstreet_{today:%Y%m%d}.png", "image/png")
+                st.caption("주요 지수·위험지표·이번 달 역사적 위치·섹터 상하위·다가오는 일정을 한 장에 담습니다. "
+                           "'📝 영상 요약 검산' 탭에 요약을 넣으면 영상 속 일정도 카드에 들어갑니다. "
+                           "존버 쇼츠 스튜디오에서 썸네일이나 정지 화면으로 쓸 수 있습니다.")
 
     with t2:
         if sectors.empty:
