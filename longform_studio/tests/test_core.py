@@ -76,3 +76,10 @@ def test_trim_time_mapping():
     assert keep == [(0.0, 5.125), (7.875, 20.0)]
     assert media.map_time(3.0, keep) == pytest.approx(3.0)
     assert media.map_time(9.0, keep) == pytest.approx(5.125 + 1.125)
+
+
+def test_zoom_spec_percent_and_pixels():
+    from longform_studio.compose import _zoom
+    assert _zoom("25%,25%,50%,50%", 1920, 1080) == ("crop=960:540:480:270,", 960, 540)
+    assert _zoom("0,0,1081,961", 1080, 1920) == ("crop=1080:960:0:0,", 1080, 960)  # 화면 밖은 잘라내고 짝수로
+    assert _zoom(None, 1920, 1080) == ("", 1920, 1080)

@@ -72,9 +72,26 @@ def render_scene(ep: Path, work: Path, src: Path, info: dict, scene: dict, f0: i
         return out
     t0 = f0 / fps
     if kind == "video":
-        media.run(["ffmpeg", "-y", "-ss", f"{t0:.3f}", "-i", str(src), "-frames:v", str(n),
-                   "-vf", _vf_fill() + ",tpad=stop_mode=clone:stop_duration=2", "-an", *ENC, "-crf", "18",
-                   "-preset", "veryfast", str(out)])
+        crop, sw, sh = _zoom(p.get("zoom"), info["width"], info["height"])
+        fit = p.get("fit") or ("cover" if abs(sw / sh - 16 / 9) < 0.03 else "contain")
+        if fit == "cover":
+            media.run(["ffmpeg", "-y", "-ss", f"{t0:.3f}", "-i", str(src), "-frames:v", str(n),
+                       "-vf", crop + _vf_fill() + ",tpad=stop_mode=clone:stop_duration=2", "-an", *ENC, "-crf", "18",
+                       "-preset", "veryfast", str(out)])
+        else:  # 16:9가 아닌 녹화(세로 폰·4:3·확대 영역): 종이 배경 위에 그림자와 함께 통째로
+            top = 180 if p.get("title") else 40
+            bw, bh = 1728, 930 - top
+            k = min(bw / sw, bh / sh)
+            w2, h2 = int(sw * k) // 2 * 2, int(sh * k) // 2 * 2
+            x2, y2 = (W - w2) // 2, top + (bh - h2) // 2
+            tmp = work / f"tmp_{out.stem}"
+            tmp.mkdir(exist_ok=True)
+            bg = _paper_with_shadow(p, (x2, y2, w2, h2), tmp / "bg.png")
+            media.run(["ffmpeg", "-y", "-ss", f"{t0:.3f}", "-i", str(src), "-loop", "1", "-i", str(bg), "-filter_complex",
+                       f"[0:v]{crop}scale={w2}:{h2},setsar=1,fps=30[v];[1:v][v]overlay={x2}:{y2}:shortest=1,"
+                       "format=yuv420p,tpad=stop_mode=clone:stop_duration=2[o]", "-map", "[o]", "-frames:v", str(n),
+                       "-an", *ENC, "-crf", "18", "-preset", "veryfast", str(out)])
+            shutil.rmtree(tmp, ignore_errors=True)
         return out
     if kind == "broll":
         clip = ep / p["clip"]
@@ -121,6 +138,35 @@ def render_scene(ep: Path, work: Path, src: Path, info: dict, scene: dict, f0: i
                    "fps=30,format=yuv420p,tpad=stop_mode=clone:stop_duration=2", "-frames:v", str(n), *ENC,
                    "-crf", "16", "-preset", "veryfast", str(out.resolve())], cwd=tmp)
     shutil.rmtree(tmp, ignore_errors=True)
+    return out
+
+
+W, H = 1920, 1080
+
+
+def _zoom(spec: str | None, sw: int, sh: int) -> tuple[str, int, int]:
+    """zoom="x,y,w,h" (원본 픽셀 또는 %) → crop 필터와 잘라낸 크기."""
+    if not spec:
+        return "", sw, sh
+    vals = []
+    for v, full in zip(str(spec).split(","), (sw, sh, sw, sh)):
+        v = v.strip()
+        vals.append(int(float(v[:-1]) / 100 * full) if v.endswith("%") else int(float(v)))
+    x, y, w, h = vals
+    w, h = min(w, sw - x) // 2 * 2, min(h, sh - y) // 2 * 2
+    return f"crop={w}:{h}:{x}:{y},", w, h
+
+
+def _paper_with_shadow(p: dict, box: tuple[int, int, int, int], out: Path) -> Path:
+    from PIL import ImageFilter
+    img, _ = templates.canvas({"title": p.get("title")})
+    x, y, w, h = box
+    sh = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    ImageDraw.Draw(sh).rectangle((x + 10, y + 14, x + w + 10, y + h + 14), fill=(0, 0, 0, 110))
+    img = Image.alpha_composite(img.convert("RGBA"), sh.filter(ImageFilter.GaussianBlur(14))).convert("RGB")
+    d = ImageDraw.Draw(img)
+    templates.credit(d, p.get("credit"))
+    img.save(out)
     return out
 
 

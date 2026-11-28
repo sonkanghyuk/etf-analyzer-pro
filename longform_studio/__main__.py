@@ -47,6 +47,10 @@ def cmd_prepare(a) -> None:
         print(f"받아쓰는 중(faster-whisper {a.model})…")
         words = transcript.from_whisper(work_src, a.model, a.prompt)
     transcript.save(words, ep)
+    if info["has_video"]:
+        (ep / "preview").mkdir(exist_ok=True)
+        n = len(qa.contact_sheets(work_src, ep / "preview", every=10, prefix="source"))
+        print(f"원본 미리보기: preview/source_*.jpg {n}장 (10초 간격)")
     source = work_src.name if work_src.parent == ep.resolve() or work_src.parent == ep else str(work_src)
     plan.write_skeleton(ep, source, words, info["has_video"], a.title or src.stem)
     print(f"완료: {ep}\n  transcript.txt 확인 → plan.md 에 장면 추가 → render")

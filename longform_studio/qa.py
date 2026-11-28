@@ -71,10 +71,12 @@ def check_output(final: Path, loudness: bool = True) -> list[dict]:
     return out
 
 
-def contact_sheets(final: Path, out_dir: Path, every: int = 5) -> list[Path]:
+def contact_sheets(final: Path, out_dir: Path, every: int = 5, prefix: str = "contact") -> list[Path]:
     with tempfile.TemporaryDirectory() as td:
-        fps = brand()["canvas"]["fps"]
-        media.run(["ffmpeg", "-y", "-i", str(final), "-vf", f"select='not(mod(n\\,{every * fps}))',scale=320:180",
+        # 시간 기준으로 every초마다 한 장(원본 fps가 달라도 라벨이 맞도록)
+        media.run(["ffmpeg", "-y", "-i", str(final), "-vf",
+                   f"select='isnan(prev_selected_t)+gte(t-prev_selected_t\\,{every - 0.001})',"
+                   "scale=320:180:force_original_aspect_ratio=decrease,pad=320:180:(ow-iw)/2:(oh-ih)/2",
                    "-fps_mode", "vfr", f"{td}/f_%05d.jpg"])
         files = sorted(Path(td).glob("f_*.jpg"))
         sheets = []
@@ -87,7 +89,7 @@ def contact_sheets(final: Path, out_dir: Path, every: int = 5) -> list[Path]:
                 t = (s + k) * every
                 d.rectangle((x, y, x + 70, y + 24), fill=(255, 230, 0))
                 d.text((x + 4, y + 2), f"{t // 60:02d}:{t % 60:02d}", fill="black", font=font("bold", 18))
-            fp = out_dir / f"contact_{s // 20:02d}.jpg"
+            fp = out_dir / f"{prefix}_{s // 20:02d}.jpg"
             sheet.save(fp, quality=88)
             sheets.append(fp)
     return sheets
