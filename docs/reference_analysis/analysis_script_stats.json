@@ -1,0 +1,128 @@
+{
+ "20261114_KwszEJgVhOE": {
+  "duration_s": 1263,
+  "sentences": 290,
+  "syllables_per_min": 374,
+  "chars_per_sec": 6.23,
+  "sentence_chars(no space) median/mean/p90": [
+   26,
+   27.1,
+   40
+  ],
+  "sentence_eojeol median/mean": [
+   8,
+   8.2
+  ],
+  "sec_per_sentence": 4.35,
+  "endings_%": {
+   "~습니다/~ㅂ니다": 57.2,
+   "~는데요/~인데요": 19.7,
+   "~죠/~죠?": 17.9,
+   "~고요": 2.8,
+   "~요(기타)": 2.4
+  },
+  "question_%": 2.1,
+  "numbers_per_min": 2.8,
+  "est_subtitle_chunks": 565,
+  "est_chunk_len(with space) median/mean": [
+   20,
+   17.1
+  ],
+  "est_sec_per_chunk": 2.23
+ },
+ "20261117_QMg65Y0FpM8": {
+  "duration_s": 918,
+  "sentences": 219,
+  "syllables_per_min": 375,
+  "chars_per_sec": 6.26,
+  "sentence_chars(no space) median/mean/p90": [
+   26,
+   26.2,
+   38
+  ],
+  "sentence_eojeol median/mean": [
+   7,
+   8.1
+  ],
+  "sec_per_sentence": 4.19,
+  "endings_%": {
+   "~습니다/~ㅂ니다": 58.0,
+   "~죠/~죠?": 18.3,
+   "~는데요/~인데요": 17.4,
+   "~고요": 3.7,
+   "~요(기타)": 2.3,
+   "기타": 0.5
+  },
+  "question_%": 2.7,
+  "numbers_per_min": 2.1,
+  "est_subtitle_chunks": 406,
+  "est_chunk_len(with space) median/mean": [
+   20,
+   17.5
+  ],
+  "est_sec_per_chunk": 2.26
+ },
+ "20261121_EG4p2UoM4bo": {
+  "duration_s": 966,
+  "sentences": 234,
+  "syllables_per_min": 380,
+  "chars_per_sec": 6.33,
+  "sentence_chars(no space) median/mean/p90": [
+   24,
+   26.1,
+   41
+  ],
+  "sentence_eojeol median/mean": [
+   7,
+   7.9
+  ],
+  "sec_per_sentence": 4.13,
+  "endings_%": {
+   "~습니다/~ㅂ니다": 56.4,
+   "~죠/~죠?": 18.8,
+   "~는데요/~인데요": 18.8,
+   "~요(기타)": 3.4,
+   "~고요": 2.6
+  },
+  "question_%": 4.3,
+  "numbers_per_min": 2.5,
+  "est_subtitle_chunks": 435,
+  "est_chunk_len(with space) median/mean": [
+   20,
+   17.3
+  ],
+  "est_sec_per_chunk": 2.22
+ },
+ "20261124_TmsRsVabats": {
+  "duration_s": 831,
+  "sentences": 175,
+  "syllables_per_min": 371,
+  "chars_per_sec": 6.18,
+  "sentence_chars(no space) median/mean/p90": [
+   26,
+   29.3,
+   44
+  ],
+  "sentence_eojeol median/mean": [
+   9,
+   9.2
+  ],
+  "sec_per_sentence": 4.75,
+  "endings_%": {
+   "~습니다/~ㅂ니다": 58.9,
+   "~죠/~죠?": 23.4,
+   "~는데요/~인데요": 15.4,
+   "~요(기타)": 1.1,
+   "~고요": 0.6,
+   "기타": 0.6
+  },
+  "question_%": 3.4,
+  "numbers_per_min": 2.2,
+  "est_subtitle_chunks": 361,
+  "est_chunk_len(with space) median/mean": [
+   21,
+   17.7
+  ],
+  "est_sec_per_chunk": 2.3
+ }
+}

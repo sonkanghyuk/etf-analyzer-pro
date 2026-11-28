@@ -89,3 +89,9 @@ streamlit run app.py
 
 `johnber_shorts_studio/` 폴더는 긴 강의 영상에서 세로 쇼츠 MP4를 만드는 별도의 로컬 앱입니다(ETF Analyzer와 독립).
 설치·실행 방법은 [`johnber_shorts_studio/README.md`](johnber_shorts_studio/README.md)를 보세요.
+
+## 롱폼 편집 가이드 · 자동화 설계 (존버나드TV)
+
+- [`docs/supetv_editing_bible.md`](docs/supetv_editing_bible.md) — 레퍼런스 4편에서 측정한 화면·자막·색·편집 호흡·대본 구조 규격
+- [`docs/video_pipeline_plan.md`](docs/video_pipeline_plan.md) — 대본과 데이터로 슬라이드·자막·영상을 뽑는 파이프라인 설계 초안
+- 분석 도구: [`tools/reference_analysis/`](tools/reference_analysis/README.md)
