@@ -1,7 +1,13 @@
 # 존버나드TV 롱폼 자동 제작 파이프라인 — 설계 초안
 
 > 목표: **대본과 데이터만 넣으면** [`supetv_editing_bible.md`](supetv_editing_bible.md) 규격의 슬라이드 이미지, 자막, 최종 영상이 나오게 한다.
-> 이 문서는 설계 초안이다. 코드는 아직 없고, 설계의 핵심 가정 두 가지(규격 레이아웃 재현, 고정 폭 자막 바)는 프로토타입으로 검증했다(§7-3).
+> 이 문서는 설계 초안이다. 설계의 핵심 가정 두 가지(규격 레이아웃 재현, 고정 폭 자막 바)는 프로토타입으로 검증했다(§7-3).
+>
+> **구현 현황:** 녹화·녹음 파일을 편집하는 모드는 [`longform_studio/`](../longform_studio/README.md)에 구현돼 있다.
+> - 기능: 무음 줄이기 → 받아쓰기 → `plan.md` 장면 → 렌더 → 품질 검사
+> - 템플릿 11종: video, broll, paper, rings, equation, vbar, hbar, chart, hub, bullets, image, bignum, quote
+>
+> 아래 §4의 대본 우선 모드(녹음 전 대본에 `@cue`를 다는 방식)와 시황 데이터 자동 채움(§6-1 `source=auto`)은 아직 구현하지 않았다.
 
 ---
 
@@ -36,7 +42,7 @@
 episode.md ─┐
 data/*.csv ─┤  ①parse      ②data        ③align           ④cues              ⑤render          ⑥timeline     ⑦compose        ⑧QA
 voice.wav ──┤ ─────────▶ scenes.json ─▶ (자동 채움) ─▶ 단어 타임스탬프 ─▶ 자막 청크·빌드 시점 ─▶ 상태별 PNG ─▶ edl.json ─▶ final.mp4 ─▶ qa_report
-assets/ ────┘                                (faster-whisper)    (≤24자 규칙)        (+애니 PNG 시퀀스)            (FFmpeg+libass)   + 컨택트시트
+assets/ ────┘                                (faster-whisper)    (≤25자 규칙)        (+애니 PNG 시퀀스)            (FFmpeg+libass)   + 컨택트시트
                                                                                                                        ⑨package: srt · chapters · thumbnail
 ```
 
@@ -181,7 +187,7 @@ fonts:
   label: {file: NanumSquareB.ttf, px: 30}
   body: {file: NanumSquareR.ttf, px: 30}
 subtitle_rules:
-  max_chars: 24                 # 공백 포함
+  max_chars: 25                 # 공백 포함
   min_duration: 0.8
   hold_gap_max: 0.6             # 문장 사이 쉼이 이보다 길면 0.3초 뒤 끔
   drop_trailing_period: true
@@ -254,11 +260,11 @@ T03 히트맵(시총·등락 데이터로 직접 squarify 트리맵), T08 해외
 for 문장 in 장면.문장들:
     어절들 = 문장.split()
     no_break 정규식에 걸리는 어절 묶음은 하나로 합침          # "12.8%", "S&P 500"
-    탐욕적으로 24자 이하가 되도록 자르되,
+    25자 이하가 되도록 자르되,
       자를 후보 중 prefer_break_after 어미로 끝나는 위치를 우선,
       없으면 가장 균등하게 나뉘는 위치
     청크 시작 = 첫 어절 발화 시각, 끝 = 다음 청크 시작 (쉼 > 0.6초면 마지막 어절 끝 + 0.3초)
-    0.8초 미만 청크는 앞 청크와 합침(합쳐도 24자 이하일 때), 아니면 경고
+    0.8초 미만 청크는 앞 청크와 합침(합쳐도 25자 이하일 때), 아니면 경고
     마침표 제거, 쉼표·물음표 유지
 ```
 산출물: 번인용 `subs.ass` + 업로드용 `subtitles.srt`(같은 청크).
@@ -324,7 +330,7 @@ ffmpeg -i visuals.mp4 -i assets/logo.png -i voice_with_gaps.wav -i assets/bgm/tr
 |---|---|---|
 | 포맷 | 1920×1080, 30fps, H.264, AAC | 오류 |
 | 라우드니스 | `ebur128` 통합 −14±1 LUFS, 트루피크 ≤ −1.5 dBTP | 경고 |
-| 자막 길이 | 모든 청크 ≤24자, ≥0.8초, 겹침 없음, 마침표 없음 | 오류 |
+| 자막 길이 | 모든 청크 ≤25자, ≥0.8초, 겹침 없음, 마침표 없음 | 오류 |
 | 숫자 분리 | 숫자+단위가 두 청크로 쪼개진 곳 없음 | 오류 |
 | 화면 정지 | 같은 화면(상태) 20초 초과 구간 없음, 평균 변화 간격 ≤12초 | 경고 + 해당 문장에 `@cue` 추가 제안 |
 | 레드 강조 | 상태마다 `red_count ≤ 2` | 경고 |

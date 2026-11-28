@@ -1,0 +1,46 @@
+# docs/supetv_editing_bible.md 의 수치를 옮긴 디자인 토큰. 템플릿 코드는 숫자 대신 이 값을 쓴다.
+canvas: {width: 1920, height: 1080, fps: 30}
+color_convention: us            # us: 상승 초록/하락 빨강 · kr: 상승 빨강/하락 파랑 (alert_red 강조 규칙은 동일)
+colors:
+  paper: "#EAEAEA"
+  ink: "#1D1D1D"
+  navy: "#15314A"
+  alert_red: "#DC0A0F"
+  label_gray: "#A9A8A8"
+  steel: "#4E7A9E"
+  up: "#3F9A5F"
+  down: "#881722"
+  up_kr: "#DC0A0F"
+  down_kr: "#1F5FBF"
+  buy: "#3DD27F"
+  sell: "#B50D11"
+  black_box: "#000000"
+  dark_slide: "#4A4A4A"
+  credit: "#6E6E6E"
+  axis_label: "#5A5A5A"
+layout:
+  logo: [1646, 32, 1898, 152]
+  title: {cx: 960, cy: 108, px: 88}
+  content: [96, 180, 1824, 920]
+  baseline: 775
+  subtitle_bar: {x0: 280, y0: 950, x1: 1638, y1: 1034, radius: 10, opacity: 0.71}
+  credit: {right: 1900, y: 1050, px: 18}
+fonts:                          # 앞에서부터 찾은 첫 파일을 쓴다 (longform_studio/fonts, johnber_shorts_studio/fonts, OS 폰트 폴더)
+  subtitle: {files: [NanumSquareB.ttf], px: 56, ass_name: NanumSquare, ass_size: 62}
+  title: {files: [GmarketSansTTFBold.ttf, GmarketSansBold.ttf, GmarketSansBold.otf, NanumSquareEB.ttf, NanumSquareB.ttf]}
+  number: {files: [GmarketSansTTFBold.ttf, GmarketSansBold.ttf, GmarketSansBold.otf, NanumSquareB.ttf]}
+  bold: {files: [NanumSquareB.ttf, NanumGothicBold.ttf]}
+  regular: {files: [NanumSquareR.ttf, NanumGothic.ttf]}
+subtitle_rules:
+  max_chars: 25
+  min_duration: 0.8
+  hold_gap_max: 0.6
+  tail_after_gap: 0.3
+pace:
+  max_static_s: 20
+trim:                           # 긴 무음 줄이기(레퍼런스 말 속도 분당 ~375음절에 맞춤)
+  noise_db: -32
+  min_silence: 0.6
+  keep_silence: 0.25
+motion:
+  grow_frames: 15               # 막대 성장·링 채움 0.5초

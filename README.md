@@ -95,3 +95,4 @@ streamlit run app.py
 - [`docs/supetv_editing_bible.md`](docs/supetv_editing_bible.md) — 레퍼런스 4편에서 측정한 화면·자막·색·편집 호흡·대본 구조 규격
 - [`docs/video_pipeline_plan.md`](docs/video_pipeline_plan.md) — 대본과 데이터로 슬라이드·자막·영상을 뽑는 파이프라인 설계 초안
 - 분석 도구: [`tools/reference_analysis/`](tools/reference_analysis/README.md)
+- 편집기: [`longform_studio/`](longform_studio/README.md) — 녹화·녹음 파일을 위 규격으로 편집 (`python -m longform_studio prepare … / render …`)

@@ -1,3 +1,12 @@
 # 레퍼런스 원본(제3자 영상·자막·프레임)은 커밋하지 않는다 — tools/reference_analysis/fetch_and_extract.py로 재생성
 reference_videos/
 __pycache__/
+# 롱폼 편집기 작업물: 원본·음성·렌더 결과는 크고 개인 자료라 제외(plan.md·transcript.txt는 남김)
+episodes/**/*.mp4
+episodes/**/*.m4a
+episodes/**/*.wav
+episodes/**/*.mp3
+episodes/**/*.mov
+episodes/**/out/
+longform_studio/fonts/*.ttf
+longform_studio/fonts/*.otf
